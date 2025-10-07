@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>NPFC Card Combo Maximizer</title>
+    <link rel="icon" href="tab-icon.png" type="image/png">
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script defer src="combos.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2em;
+            background-color: #f8f9fa;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        #cardList {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 0;
+            margin-bottom: 1em;
+            background-color: white;
+            border-radius: 6px;
+        }
+
+        .cardItem {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .cardItem:last-child {
+            border-bottom: none;
+        }
+
+        .cardItem label {
+            flex: 1;
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .cardItem input {
+            width: 55px;
+            margin-left: 8px;
+        }
+
+        #results {
+            margin-top: 25px;
+        }
+
+        #results ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        #results li {
+            background: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        footer {
+            margin-top: 3em;
+            text-align: center;
+            font-size: 0.9em;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #optionsPanel {
+            margin: 10px 0 20px 0;
+            padding: 10px;
+            background: #eef3f9;
+            border-radius: 6px;
+            border: 1px solid #ccd;
+        }
+
+        #optionsPanel label {
+            font-weight: normal;
+        }
+    </style>
+
+</head>
+
+<body>
+    <h1>NPFC Card Combo Maximizer</h1>
+
+    <div id="cardListHeader"
+        style="display: flex; justify-content: space-between; padding: 6px 12px; font-weight: bold; border-bottom: 2px solid #aaa; background-color: #f0f0f0;">
+        <span>Card Name</span>
+        <span>You Have</span>
+    </div>
+
+    <div id="cardList">Loading cards...</div>
+
+    <div id="optionsPanel">
+        <strong>Optimization Mode:</strong><br>
+        <label><input type="radio" name="optMode" value="cards" checked> Use the most cards possible</label><br>
+        <label><input type="radio" name="optMode" value="skills"> Gain the most skill points possible</label>
+    </div>
+    <br>
+
+    <button id="findCombosBtn">Find Combos</button>
+    <button id="resetBtn" style="margin-left: 10px; background-color: #6c757d;">Reset Cards</button>
+
+    <div id="results"></div>
+
+    <footer>
+        <hr>
+        <p><a href="#">Back to Top</a></p>
+        <p><em>Created by: Seth Opatz, 10/06/2025</em></p>
+    </footer>
+</body>
+
+</html>
