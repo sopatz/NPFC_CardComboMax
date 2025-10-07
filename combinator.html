@@ -105,7 +105,7 @@
 </head>
 
 <body>
-    <h1>NPFC Card Combo Maximizer</h1>
+    <h1>Nintendo Pocket Football Club: Card Combo Maximizer</h1>
 
     <div id="cardListHeader"
         style="display: flex; justify-content: space-between; padding: 6px 12px; font-weight: bold; border-bottom: 2px solid #aaa; background-color: #f0f0f0;">
@@ -119,6 +119,12 @@
         <strong>Optimization Mode:</strong><br>
         <label><input type="radio" name="optMode" value="cards" checked> Use the most cards possible</label><br>
         <label><input type="radio" name="optMode" value="skills"> Gain the most skill points possible</label>
+        <br><br><strong>GK Combo Limit:</strong><br>
+        <select id="gkLimitSelect">
+            <option value="none" selected>No limit</option>
+            <option value="1">Limit to 1 GK combo</option>
+            <option value="2">Limit to 2 GK combos</option>
+        </select>
     </div>
     <br>
 
