@@ -103,9 +103,17 @@
             font-weight: normal;
         }
 
+        #buttonContainer {
+            margin-top: 10px;
+        }
+
         #resetBtn {
-            margin-left: 10px; 
+            margin-left: 10px;
             background-color: #6c757d;
+        }
+
+        #resetBtn:hover {
+            background-color: #5a6268;
         }
 
         /* --- Mobile responsiveness --- */
@@ -141,7 +149,7 @@
 
             .cardItem input {
                 width: 100%;
-                right: 6px;
+                text-align: center;
             }
 
             button {
@@ -164,18 +172,28 @@
                 line-height: 1.4;
             }
 
-            #findCombosBtn {
+            #buttonContainer {
                 position: sticky;
                 bottom: 15px;
-                width: 100%;
                 z-index: 100;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 8px;
+                background: #f8f9fae0; /* subtle translucent background */
+                padding: 8px 0;
+                border-radius: 8px;
+                backdrop-filter: blur(4px);
+            }
+
+            #buttonContainer button {
+                width: 90%;
+                max-width: 400px;
+                margin: 0;
             }
 
             #resetBtn {
-                position: sticky;
-                bottom: 15px;
-                width: 100%;
-                z-index: 100;
+                margin-left: 0;
             }
         }
     </style>
@@ -206,8 +224,10 @@
     </div>
     <br>
 
-    <button id="findCombosBtn">Find Combos</button>
-    <button id="resetBtn">Reset Cards</button>
+    <div id="buttonContainer">
+        <button id="findCombosBtn">Find Combos</button>
+        <button id="resetBtn">Reset Cards</button>
+    </div>
 
     <div id="results"></div>
 
