@@ -1,5 +1,3 @@
-// combos.js
-
 const CSV_FILE = "NPFC Combos.csv";
 
 let combos = [];
@@ -220,9 +218,21 @@ function displayResults(bestCombos, mode) {
         div.style.padding = "8px";
         div.style.borderBottom = "1px solid #ccc";
 
-        const cards = [combo.card1, combo.card2, combo.card3]
+        // --- Color each card individually ---
+        const cardElements = [combo.card1, combo.card2, combo.card3]
             .filter(x => x && x.trim() !== "")
-            .join(", ");
+            .map(cardName => {
+                const color = getCardColor(cardName);
+                return `<span style="
+                    background-color:${color.bg};
+                    color:${color.text};
+                    padding:2px 6px;
+                    border-radius:4px;
+                    margin-right:4px;
+                    display:inline-block;
+                ">${cardName}</span>`;
+            })
+            .join("");
 
         const skillUps = [
             ["Kicking", combo.Kicking],
@@ -235,8 +245,9 @@ function displayResults(bestCombos, mode) {
         ].filter(([name, val]) => val && val !== "");
 
         div.innerHTML = `
-            <strong>${combo["Combo Name"]}${count > 1 ? ` ×${count}` : ""}</strong> (${combo.Category})<br>
-            Cards: ${cards}<br>
+            <strong>${combo["Combo Name"]}${count > 1 ? ` ×${count}` : ""}</strong> 
+            (${combo.Category})<br>
+            Cards: ${cardElements}<br>
             Total Skill Up: ${combo["Total skill up"]}<br>
             ${skillUps.map(([name, val]) => `${name}: +${val}`).join(", ")}
         `;
