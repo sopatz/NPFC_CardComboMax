@@ -103,6 +103,11 @@
             font-weight: normal;
         }
 
+        #resetBtn {
+            margin-left: 10px; 
+            background-color: #6c757d;
+        }
+
         /* --- Mobile responsiveness --- */
         @media (max-width: 600px) {
             body {
@@ -136,6 +141,7 @@
 
             .cardItem input {
                 width: 100%;
+                right: 6px;
             }
 
             button {
@@ -159,6 +165,13 @@
             }
 
             #findCombosBtn {
+                position: sticky;
+                bottom: 15px;
+                width: 100%;
+                z-index: 100;
+            }
+
+            #resetBtn {
                 position: sticky;
                 bottom: 15px;
                 width: 100%;
@@ -194,7 +207,7 @@
     <br>
 
     <button id="findCombosBtn">Find Combos</button>
-    <button id="resetBtn" style="margin-left: 10px; background-color: #6c757d;">Reset Cards</button>
+    <button id="resetBtn">Reset Cards</button>
 
     <div id="results"></div>
 
