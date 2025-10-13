@@ -32,65 +32,102 @@ function extractCards() {
 
 function buildCardInputs() {
     const container = document.getElementById("cardList");
+
+    // --- Save current input values before rebuilding ---
+    const savedValues = {};
+    document.querySelectorAll("#cardList input").forEach(input => {
+        const cardName = input.id.replace(/^card-/, "").replace(/_/g, " ");
+        savedValues[cardName] = input.value;
+    });
+
     container.innerHTML = "";
 
-    // Get sort preference
     const sortMode = document.getElementById("sortSelect")?.value || "alpha";
-
     let sortedCards = Array.from(uniqueCards);
 
+    // Category definitions (must match getCardColor)
+    const categories = {
+        "Tactical": ["Analysis", "Marking", "Pressuring", "Countering", "Mini-Game", "Line Control", "Set Plays"],
+        "Technical": ["Dribbling", "Place Kicks", "Shooting", "Passing", "Freestyling", "Sliding", "Heading"],
+        "Physical": ["Running", "Weights", "Kicking", "Sprinting", "Agility", "Aerobics", "Stretching"],
+        "Support": ["Oil Therapy", "Meditation", "Signing", "PK Practice", "Judo", "Visualising", "Meeting", "Spa", "Mini-Camp", "Gaming", "Karaoke"]
+    };
+
+    // Determine order based on selected mode
     if (sortMode === "color") {
-        // preserve exact color group + order defined in getCardColor categories
-        const tactical = ["Analysis", "Marking", "Pressuring", "Countering", "Mini-Game", "Line Control", "Set Plays"];
-        const technical = ["Dribbling", "Place Kicks", "Shooting", "Passing", "Freestyling", "Sliding", "Heading"];
-        const physical = ["Running", "Weights", "Kicking", "Sprinting", "Agility", "Aerobics", "Stretching"];
-        const support = ["Oil Therapy", "Meditation", "Signing", "PK Practice", "Judo", "Visualising", "Meeting", "Spa", "Mini-Camp", "Gaming", "Karaoke"];
-
-        const categorized = [
-            ...tactical.filter(c => sortedCards.includes(c)),
-            ...technical.filter(c => sortedCards.includes(c)),
-            ...physical.filter(c => sortedCards.includes(c)),
-            ...support.filter(c => sortedCards.includes(c)),
-        ];
-
-        // Include any cards not in known categories
+        const categorized = [];
+        for (const arr of Object.values(categories)) {
+            categorized.push(...arr.filter(c => sortedCards.includes(c)));
+        }
         const uncategorized = sortedCards.filter(c => !categorized.includes(c));
-
         sortedCards = [...categorized, ...uncategorized];
     } else {
-        // Default alphabetical sort
         sortedCards.sort();
     }
 
-    // Create input elements
-    sortedCards.forEach(card => {
-        const div = document.createElement("div");
-        div.className = "cardItem";
+    // --- Add category headings and cards ---
+    const addCategoryHeading = (title) => {
+        const heading = document.createElement("div");
+        heading.textContent = title;
+        heading.style.fontWeight = "bold";
+        heading.style.fontSize = "1.05em";
+        heading.style.margin = "16px 92px 4px 12px";
+        heading.style.padding = "4px 8px";
+        heading.style.backgroundColor = "#e8e8e8";
+        heading.style.borderRadius = "4px";
+        heading.style.textAlign = "center";
+        container.appendChild(heading);
+    };
 
-        const label = document.createElement("label");
-        label.textContent = card;
+    if (sortMode === "color") {
+        for (const [title, cards] of Object.entries(categories)) {
+            const filtered = cards.filter(c => sortedCards.includes(c));
+            if (filtered.length > 0) {
+                addCategoryHeading(title);
+                filtered.forEach(card => container.appendChild(createCardInput(card, savedValues[card])));
+            }
+        }
 
-        // Apply category color
-        const color = getCardColor(card);
-        label.style.backgroundColor = color.bg;
-        label.style.color = color.text;
-        label.style.padding = "4px 8px";
-        label.style.borderRadius = "4px";
-        label.style.marginRight = "10px";
-        label.style.minWidth = "140px";
-        label.style.textAlign = "center";
+        // Add uncategorized section (if any)
+        const uncategorized = sortedCards.filter(c =>
+            !Object.values(categories).some(list => list.includes(c))
+        );
+        if (uncategorized.length > 0) {
+            addCategoryHeading("Other Cards");
+            uncategorized.forEach(card => container.appendChild(createCardInput(card, savedValues[card])));
+        }
+    } else {
+        sortedCards.forEach(card => container.appendChild(createCardInput(card, savedValues[card])));
+    }
+}
 
-        const input = document.createElement("input");
-        input.type = "number";
-        input.min = "0";
-        input.max = "10";
-        input.value = "0";
-        input.id = `card-${card.replace(/\s+/g, "_")}`;
+function createCardInput(card, savedValue = "0") {
+    const div = document.createElement("div");
+    div.className = "cardItem";
 
-        div.appendChild(label);
-        div.appendChild(input);
-        container.appendChild(div);
-    });
+    const label = document.createElement("label");
+    label.textContent = card;
+
+    const color = getCardColor(card);
+    label.style.backgroundColor = color.bg;
+    label.style.color = color.text;
+    label.style.padding = "4px 8px";
+    label.style.borderRadius = "4px";
+    label.style.marginRight = "10px";
+    label.style.minWidth = "140px";
+    label.style.textAlign = "center";
+
+    const input = document.createElement("input");
+    input.type = "number";
+    input.min = "0";
+    input.max = "10";
+    input.value = savedValue;
+    input.id = `card-${card.replace(/\s+/g, "_")}`;
+
+    div.appendChild(label);
+    div.appendChild(input);
+
+    return div;
 }
 
 // Helper function to assign colors by card category
