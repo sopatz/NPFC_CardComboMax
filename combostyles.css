@@ -124,6 +124,7 @@ button:hover {
     float: right;
     font-size: 0.85em;
 }
+
 .removeBtn:hover {
     background: #b02a37;
 }
@@ -195,7 +196,8 @@ button:hover {
         flex-direction: column;
         align-items: center;
         gap: 8px;
-        background: #f8f9fae0; /* subtle translucent background */
+        background: #f8f9fae0;
+        /* subtle translucent background */
         padding: 8px 0;
         border-radius: 8px;
         backdrop-filter: blur(4px);
@@ -222,17 +224,23 @@ button:hover {
 
     .removeBtn {
         float: none;
-        display: block;
-        width: 100%;
-        margin-top: 6px;
-        padding: 10px;
-        font-size: 1em;
+        display: inline-block;
+        width: 90%;
+        margin-top: 4px;
+        padding: 6px 10px;
+        font-size: 0.9em;
+        background: transparent;
+        color: #c0392b;
+        border: 1px solid #c0392b;
+        border-radius: 4px;
         text-align: center;
-        background: #dc3545;
-        border-radius: 6px;
+        align-self: flex-end;
+        opacity: 0.85;
     }
 
     .removeBtn:hover {
-        background: #b02a37;
+        background: #c0392b10;
+        opacity: 1;
     }
+
 }
