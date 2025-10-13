@@ -104,7 +104,17 @@ button:hover {
     background-color: #5a6268;
 }
 
-/* --- Mobile responsiveness --- */
+.categoryHeading {
+    font-weight: bold;
+    font-size: 1.05em;
+    margin: 16px 92px 4px 12px;
+    padding: 4px 8px;
+    background-color: #e8e8e8;
+    border-radius: 4px;
+    text-align: center;
+}
+
+/* --- Mobile stylings --- */
 @media (max-width: 600px) {
     body {
         margin: 1em;
@@ -171,8 +181,7 @@ button:hover {
         flex-direction: column;
         align-items: center;
         gap: 8px;
-        background: #f8f9fae0;
-        /* subtle translucent background */
+        background: #f8f9fae0; /* subtle translucent background */
         padding: 8px 0;
         border-radius: 8px;
         backdrop-filter: blur(4px);
@@ -186,5 +195,12 @@ button:hover {
 
     #resetBtn {
         margin-left: 0;
+    }
+
+    .categoryHeading {
+        width: 90%;
+        margin: 8px auto 0 auto;
+        text-align: center;
+        border-radius: 6px;
     }
 }

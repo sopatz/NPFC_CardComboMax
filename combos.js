@@ -69,15 +69,10 @@ function buildCardInputs() {
     const addCategoryHeading = (title) => {
         const heading = document.createElement("div");
         heading.textContent = title;
-        heading.style.fontWeight = "bold";
-        heading.style.fontSize = "1.05em";
-        heading.style.margin = "16px 92px 4px 12px";
-        heading.style.padding = "4px 8px";
-        heading.style.backgroundColor = "#e8e8e8";
-        heading.style.borderRadius = "4px";
-        heading.style.textAlign = "center";
+        heading.className = "categoryHeading";
         container.appendChild(heading);
     };
+
 
     if (sortMode === "color") {
         for (const [title, cards] of Object.entries(categories)) {
