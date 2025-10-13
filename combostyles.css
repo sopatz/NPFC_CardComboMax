@@ -219,4 +219,20 @@ button:hover {
         border-radius: 6px;
         box-sizing: border-box;
     }
+
+    .removeBtn {
+        float: none;
+        display: block;
+        width: 100%;
+        margin-top: 6px;
+        padding: 10px;
+        font-size: 1em;
+        text-align: center;
+        background: #dc3545;
+        border-radius: 6px;
+    }
+
+    .removeBtn:hover {
+        background: #b02a37;
+    }
 }
