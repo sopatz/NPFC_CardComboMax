@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("cardList").innerText = "Error loading CSV: " + err.message;
         }
     });
-
+    document.getElementById("sortSelect").addEventListener("change", buildCardInputs);
     document.getElementById("findCombosBtn").addEventListener("click", findCombos);
     document.getElementById("resetBtn").addEventListener("click", resetCards);
 });
@@ -34,7 +34,35 @@ function buildCardInputs() {
     const container = document.getElementById("cardList");
     container.innerHTML = "";
 
-    const sortedCards = Array.from(uniqueCards).sort();
+    // Get sort preference
+    const sortMode = document.getElementById("sortSelect")?.value || "alpha";
+
+    let sortedCards = Array.from(uniqueCards);
+
+    if (sortMode === "color") {
+        // preserve exact color group + order defined in getCardColor categories
+        const tactical = ["Analysis", "Marking", "Pressuring", "Countering", "Mini-Game", "Line Control", "Set Plays"];
+        const technical = ["Dribbling", "Place Kicks", "Shooting", "Passing", "Freestyling", "Sliding", "Heading"];
+        const physical = ["Running", "Weights", "Kicking", "Sprinting", "Agility", "Aerobics", "Stretching"];
+        const support = ["Oil Therapy", "Meditation", "Signing", "PK Practice", "Judo", "Visualising", "Meeting", "Spa", "Mini-Camp", "Gaming", "Karaoke"];
+
+        const categorized = [
+            ...tactical.filter(c => sortedCards.includes(c)),
+            ...technical.filter(c => sortedCards.includes(c)),
+            ...physical.filter(c => sortedCards.includes(c)),
+            ...support.filter(c => sortedCards.includes(c)),
+        ];
+
+        // Include any cards not in known categories
+        const uncategorized = sortedCards.filter(c => !categorized.includes(c));
+
+        sortedCards = [...categorized, ...uncategorized];
+    } else {
+        // Default alphabetical sort
+        sortedCards.sort();
+    }
+
+    // Create input elements
     sortedCards.forEach(card => {
         const div = document.createElement("div");
         div.className = "cardItem";
@@ -68,8 +96,8 @@ function buildCardInputs() {
 // Helper function to assign colors by card category
 function getCardColor(cardName) {
     const tactical = ["Analysis", "Marking", "Pressuring", "Countering", "Mini-Game", "Line Control", "Set Plays"];
-    const technical = ["Dribbling", "Place Kicks", "Shooting", "Sliding", "Passing", "Freestyling", "Heading"];
-    const physical = ["Running", "Sprinting", "Weights", "Agility", "Kicking", "Aerobics", "Stretching"];
+    const technical = ["Dribbling", "Place Kicks", "Shooting", "Passing", "Freestyling", "Sliding", "Heading"];
+    const physical = ["Running", "Weights", "Kicking", "Sprinting", "Agility", "Aerobics", "Stretching"];
     const support = ["Oil Therapy", "Meditation", "Signing", "PK Practice", "Judo", "Visualising", "Meeting", "Spa", "Mini-Camp", "Gaming", "Karaoke"];
 
     const name = cardName.trim();
