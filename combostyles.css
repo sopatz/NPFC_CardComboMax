@@ -114,6 +114,20 @@ button:hover {
     text-align: center;
 }
 
+.removeBtn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    float: right;
+    font-size: 0.85em;
+}
+.removeBtn:hover {
+    background: #b02a37;
+}
+
 /* --- Mobile stylings --- */
 @media (max-width: 600px) {
     body {

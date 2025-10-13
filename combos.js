@@ -272,11 +272,23 @@ function displayResults(bestCombos, mode) {
     });
 
     Object.values(comboCounts).forEach(({ combo, count }) => {
+        const comboName = combo["Combo Name"];
         const div = document.createElement("div");
         div.className = "comboResult";
         div.style.marginBottom = "10px";
         div.style.padding = "8px";
         div.style.borderBottom = "1px solid #ccc";
+        div.dataset.comboName = comboName;
+
+        // Remove button
+        const removeBtn = document.createElement("button");
+        removeBtn.textContent = "Remove";
+        removeBtn.className = "removeBtn";
+        removeBtn.addEventListener("click", () => {
+            div.style.transition = "opacity 0.3s ease";
+            div.style.opacity = "0";
+            setTimeout(() => div.remove(), 300);
+        });
 
         // --- Color each card individually ---
         const cardElements = [combo.card1, combo.card2, combo.card3]
@@ -305,12 +317,14 @@ function displayResults(bestCombos, mode) {
         ].filter(([name, val]) => val && val !== "");
 
         div.innerHTML = `
-            <strong>${combo["Combo Name"]}${count > 1 ? ` ×${count}` : ""}</strong> 
+            <strong>${comboName}${count > 1 ? ` ×${count}` : ""}</strong> 
             (${combo.Category})<br>
             Cards: ${cardElements}<br>
             Total Skill Up: ${combo["Total skill up"]}<br>
             ${skillUps.map(([name, val]) => `${name}: +${val}`).join(", ")}
         `;
+
+        div.appendChild(removeBtn);
         resultsDiv.appendChild(div);
     });
 
