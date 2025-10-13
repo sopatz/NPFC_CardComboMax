@@ -199,7 +199,10 @@ button:hover {
 
     .categoryHeading {
         width: 90%;
+        margin: 8px auto 0 auto;
         text-align: center;
-        margin: auto;
+        padding: 8px;
+        border-radius: 6px;
+        box-sizing: border-box;
     }
 }
