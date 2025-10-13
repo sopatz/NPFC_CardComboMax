@@ -33,7 +33,7 @@ function extractCards() {
 function buildCardInputs() {
     const container = document.getElementById("cardList");
 
-    // --- Save current input values before rebuilding ---
+    // Save current input values before rebuilding
     const savedValues = {};
     document.querySelectorAll("#cardList input").forEach(input => {
         const cardName = input.id.replace(/^card-/, "").replace(/_/g, " ");
@@ -65,7 +65,7 @@ function buildCardInputs() {
         sortedCards.sort();
     }
 
-    // --- Add category headings and cards ---
+    // Add category headings and cards
     const addCategoryHeading = (title) => {
         const heading = document.createElement("div");
         heading.textContent = title;
@@ -161,13 +161,13 @@ function findCombos() {
     // Read optimization mode
     const mode = document.querySelector('input[name="optMode"]:checked').value;
 
-    // Step 1: Filter combos that are fully makeable with current inventory
+    // Filter combos that are fully makeable with current inventory
     const makeableCombos = combos.filter(combo => {
         const cardsNeeded = [combo.card1, combo.card2, combo.card3].filter(c => c && c.trim() !== "");
         return cardsNeeded.every(c => cardCounts[c.trim()] && cardCounts[c.trim()] > 0);
     });
 
-    // Step 2: Optimize based on mode
+    // Optimize based on mode
     const gkLimitValue = document.getElementById("gkLimitSelect").value;
     const bestSet = maximizeUsage(makeableCombos, cardCounts, mode, gkLimitValue);
 
@@ -176,7 +176,7 @@ function findCombos() {
 
 // mode = "cards" or "skills"
 function maximizeUsage(comboList, available, mode = "cards", gkLimit = "none") {
-    // Step 1: Expand combos based on how many copies can be made
+    // Expand combos based on how many copies can be made
     const expanded = [];
     comboList.forEach(combo => {
         const required = [combo.card1, combo.card2, combo.card3].filter(c => c && c.trim() !== "");
@@ -186,7 +186,7 @@ function maximizeUsage(comboList, available, mode = "cards", gkLimit = "none") {
         }
     });
 
-    // Step 2: Backtracking search on expanded list
+    // Backtracking search on expanded list
     let best = [];
     let bestScore = 0;
 
@@ -204,9 +204,9 @@ function maximizeUsage(comboList, available, mode = "cards", gkLimit = "none") {
             const combo = expanded[i];
             const needed = [combo.card1, combo.card2, combo.card3].filter(c => c && c.trim() !== "");
 
-            // Check if we have enough remaining cards for another copy
+            // Check if there are enough remaining cards for another copy
             if (needed.every(c => remainingCounts[c.trim()] && remainingCounts[c.trim()] > 0)) {
-                // --- GK limit check ---
+                // GK limit check
                 if (gkLimit !== "none") {
                     const gkCount = currentSet.filter(c => (c.Category || "").toUpperCase().includes("GK")).length;
                     const nextIsGK = (combo.Category || "").toUpperCase().includes("GK");
@@ -249,7 +249,6 @@ function resetCards() {
         input.value = "0";
     });
 
-    // Optional: clear the results area too
     const resultsDiv = document.getElementById("results");
     resultsDiv.innerHTML = "";
 }
@@ -263,7 +262,7 @@ function displayResults(bestCombos, mode) {
         return;
     }
 
-    // --- Group duplicates ---
+    // Group duplicates
     const comboCounts = {};
     bestCombos.forEach(c => {
         const key = c["Combo Name"];
@@ -290,7 +289,7 @@ function displayResults(bestCombos, mode) {
             setTimeout(() => div.remove(), 300);
         });
 
-        // --- Color each card individually ---
+        // Color each card individually
         const cardElements = [combo.card1, combo.card2, combo.card3]
             .filter(x => x && x.trim() !== "")
             .map(cardName => {
@@ -328,7 +327,7 @@ function displayResults(bestCombos, mode) {
         resultsDiv.appendChild(div);
     });
 
-    // --- Totals ---
+    // Totals
     const total = {
         Kicking: 0, Speed: 0, Stamina: 0, Technique: 0,
         Toughness: 0, Jumping: 0, Willpower: 0
