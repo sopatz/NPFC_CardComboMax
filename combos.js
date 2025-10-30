@@ -176,54 +176,154 @@ function findCombos() {
 
 // mode = "cards" or "skills"
 function maximizeUsage(comboList, available, mode = "cards", gkLimit = "none") {
-    // Expand combos based on how many copies can be made
+    // Build expanded list with metadata (pre-trim card names)
     const expanded = [];
     comboList.forEach(combo => {
-        const required = [combo.card1, combo.card2, combo.card3].filter(c => c && c.trim() !== "");
-        const maxCopies = Math.min(...required.map(c => Math.floor((available[c.trim()] || 0) / 1)));
+        const required = [combo.card1, combo.card2, combo.card3]
+            .filter(c => c && c.trim() !== "")
+            .map(c => c.trim());
+
+        if (required.length === 0) return;
+
+        const maxCopies = Math.min(...required.map(c => Math.floor((available[c] || 0) / 1)));
+
         for (let i = 0; i < maxCopies; i++) {
-            expanded.push({ ...combo });
+            expanded.push({
+                orig: combo,
+                needed: required,
+                isGK: ((combo.Category || "").toUpperCase().includes("GK")),
+            });
         }
     });
 
-    // Backtracking search on expanded list
-    let best = [];
-    let bestScore = 0;
+    if (expanded.length === 0) return [];
 
-    function backtrack(startIndex, currentSet, remainingCounts) {
-        const score = (mode === "skills")
-            ? totalSkillPoints(currentSet)
-            : totalCardsUsed(currentSet);
-
-        if (score > bestScore) {
-            bestScore = score;
-            best = [...currentSet];
-        }
-
-        for (let i = startIndex; i < expanded.length; i++) {
-            const combo = expanded[i];
-            const needed = [combo.card1, combo.card2, combo.card3].filter(c => c && c.trim() !== "");
-
-            // Check if there are enough remaining cards for another copy
-            if (needed.every(c => remainingCounts[c.trim()] && remainingCounts[c.trim()] > 0)) {
-                // GK limit check
-                if (gkLimit !== "none") {
-                    const gkCount = currentSet.filter(c => (c.Category || "").toUpperCase().includes("GK")).length;
-                    const nextIsGK = (combo.Category || "").toUpperCase().includes("GK");
-                    const limitNum = parseInt(gkLimit);
-                    if (nextIsGK && gkCount >= limitNum) {
-                        continue; // skip if adding this GK combo would exceed limit
+    // Robust combo value computation
+    function comboValue(entry) {
+        const c = entry.orig;
+        if (mode === "skills") {
+            let total = 0;
+            const skip = new Set([
+                "card1", "card2", "card3",
+                "Category", "category",
+                "Name", "name",
+                "ComboId", "comboId", "ID", "id"
+            ]);
+            for (const k in c) {
+                if (skip.has(k)) continue;
+                const v = c[k];
+                if (v == null) continue;
+                const matches = String(v).match(/[-+]?\d+/g);
+                if (matches) {
+                    for (const m of matches) {
+                        const num = parseInt(m, 10);
+                        if (!isNaN(num)) total += num;
                     }
                 }
-                const nextCounts = { ...remainingCounts };
-                needed.forEach(c => nextCounts[c.trim()] -= 1);
-                backtrack(i + 1, [...currentSet, combo], nextCounts);
             }
+            return Math.max(0, total);
+        } else {
+            return entry.needed.length;
         }
     }
 
-    backtrack(0, [], { ...available });
-    return best;
+    expanded.forEach(e => e._value = comboValue(e));
+    expanded.sort((a, b) => b._value - a._value);
+
+    const suffixUpper = new Array(expanded.length + 1).fill(0);
+    for (let i = expanded.length - 1; i >= 0; i--) {
+        suffixUpper[i] = suffixUpper[i + 1] + expanded[i]._value;
+    }
+
+    const bestSet = [];
+    let bestScore = -Infinity;
+    const currentSet = [];
+    const counts = {};
+    Object.keys(available).forEach(k => counts[k] = available[k]);
+
+    // 🟢 GREEDY SEEDING STEP
+    (function greedySeed() {
+        const tempCounts = { ...counts };
+        let gkUsed = 0;
+        const greedySet = [];
+        let greedyScore = 0;
+
+        // Sort by value-per-card ratio descending
+        const sortedByRatio = [...expanded].sort(
+            (a, b) => (b._value / b.needed.length) - (a._value / a.needed.length)
+        );
+
+        for (const entry of sortedByRatio) {
+            if (gkLimit !== "none" && entry.isGK) {
+                const limit = parseInt(gkLimit, 10);
+                if (gkUsed >= limit) continue;
+            }
+
+            // check if can make with available cards
+            let canMake = true;
+            for (const card of entry.needed) {
+                if (!tempCounts[card] || tempCounts[card] <= 0) {
+                    canMake = false;
+                    break;
+                }
+            }
+            if (!canMake) continue;
+
+            // use combo
+            for (const card of entry.needed) tempCounts[card]--;
+            greedySet.push(entry.orig);
+            greedyScore += entry._value;
+            if (entry.isGK) gkUsed++;
+        }
+
+        if (greedyScore > 0) {
+            bestScore = greedyScore;
+            bestSet.length = 0;
+            bestSet.push(...greedySet);
+        }
+    })();
+
+    // 🔵 BACKTRACKING WITH PRUNING
+    function backtrack(idx, currentScore, currentGKCount) {
+        if (currentScore + (suffixUpper[idx] || 0) <= bestScore) return;
+
+        if (currentScore > bestScore) {
+            bestScore = currentScore;
+            bestSet.length = 0;
+            for (let i = 0; i < currentSet.length; i++) bestSet.push(currentSet[i].orig);
+        }
+
+        for (let i = idx; i < expanded.length; i++) {
+            const entry = expanded[i];
+            if (currentScore + suffixUpper[i] <= bestScore) break;
+
+            if (gkLimit !== "none" && entry.isGK) {
+                const limit = parseInt(gkLimit, 10);
+                if (currentGKCount >= limit) continue;
+            }
+
+            let canMake = true;
+            for (const card of entry.needed) {
+                if (!counts[card] || counts[card] <= 0) {
+                    canMake = false;
+                    break;
+                }
+            }
+            if (!canMake) continue;
+
+            for (const card of entry.needed) counts[card]--;
+            currentSet.push(entry);
+
+            const nextGK = currentGKCount + (entry.isGK ? 1 : 0);
+            backtrack(i + 1, currentScore + entry._value, nextGK);
+
+            currentSet.pop();
+            for (const card of entry.needed) counts[card]++;
+        }
+    }
+
+    backtrack(0, 0, 0);
+    return bestSet;
 }
 
 function totalCardsUsed(comboSet) {
