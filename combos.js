@@ -176,32 +176,51 @@ function findCombos() {
 
 // mode = "cards" or "skills"
 function maximizeUsage(comboList, available, mode = "cards", gkLimit = "none") {
-    // Build expanded list with metadata (pre-trim card names)
-    const expanded = [];
+    // Normalize GK limit
+    const GK_LIMIT = (gkLimit === "none") ? Infinity : parseInt(gkLimit, 10);
+
+    // Prepare a list of combos as objects { orig, neededArray, isGK, value, neededCountsMap, maxCopies }
+    // Also collect all relevant card names
+    const cardIndexMap = {}; // maps card name -> index
+    let cardIdxCounter = 0;
+
+    const combosPrepared = [];
     comboList.forEach(combo => {
-        const required = [combo.card1, combo.card2, combo.card3]
+        const req = [combo.card1, combo.card2, combo.card3]
             .filter(c => c && c.trim() !== "")
             .map(c => c.trim());
+        if (req.length === 0) return;
 
-        if (required.length === 0) return;
+        // count needed per card for this combo (most combos are 1 each, but keep generic)
+        const needCounts = {};
+        for (const c of req) needCounts[c] = (needCounts[c] || 0) + 1;
 
-        const maxCopies = Math.min(...required.map(c => Math.floor((available[c] || 0) / 1)));
-
-        for (let i = 0; i < maxCopies; i++) {
-            expanded.push({
-                orig: combo,
-                needed: required,
-                isGK: ((combo.Category || "").toUpperCase().includes("GK")),
-            });
+        // fill card index map
+        for (const c of Object.keys(needCounts)) {
+            if (!(c in cardIndexMap)) {
+                cardIndexMap[c] = cardIdxCounter++;
+            }
         }
+
+        const isGK = ((combo.Category || "").toUpperCase().includes("GK"));
+
+        combosPrepared.push({
+            orig: combo,
+            needed: Object.keys(needCounts),
+            needCounts,
+            isGK,
+            _value: 0, // compute below based on mode
+        });
     });
 
-    if (expanded.length === 0) return [];
+    if (combosPrepared.length === 0) return [];
 
-    // Robust combo value computation
-    function comboValue(entry) {
-        const c = entry.orig;
+    // compute _value for each prepared combo
+    combosPrepared.forEach(entry => {
+        // Build a temporary entry-like structure to reuse original comboValue behavior
+        // if mode === "skills" sum numeric fields; else value = number of cards (for cards mode)
         if (mode === "skills") {
+            const c = entry.orig;
             let total = 0;
             const skip = new Set([
                 "card1", "card2", "card3",
@@ -221,109 +240,190 @@ function maximizeUsage(comboList, available, mode = "cards", gkLimit = "none") {
                     }
                 }
             }
-            return Math.max(0, total);
+            entry._value = Math.max(0, total);
         } else {
-            return entry.needed.length;
+            entry._value = entry.needed.length;
         }
+    });
+
+    // Precompute starting available counts array only for cards that are used in combos
+    const Ncards = Object.keys(cardIndexMap).length;
+    const startCounts = new Array(Ncards).fill(0);
+    for (const [card, idx] of Object.entries(cardIndexMap)) {
+        startCounts[idx] = available[card] || 0;
     }
 
-    expanded.forEach(e => e._value = comboValue(e));
-    expanded.sort((a, b) => b._value - a._value);
+    // Precompute maxCopies per combo based on initial available (upper bound)
+    combosPrepared.forEach(entry => {
+        let maxCopies = Infinity;
+        for (const card of entry.needed) {
+            const need = entry.needCounts[card] || 1;
+            const avail = startCounts[cardIndexMap[card]] || 0;
+            maxCopies = Math.min(maxCopies, Math.floor(avail / need));
+        }
+        entry.maxCopiesInit = isFinite(maxCopies) ? maxCopies : 0;
+    });
 
-    const suffixUpper = new Array(expanded.length + 1).fill(0);
-    for (let i = expanded.length - 1; i >= 0; i--) {
-        suffixUpper[i] = suffixUpper[i + 1] + expanded[i]._value;
-    }
+    // Sort combos by value-per-card (descending) to get better pruning and fractional upper bound calculations
+    combosPrepared.sort((a, b) => {
+        const aCost = a.needed.reduce((s, c) => s + (a.needCounts[c] || 1), 0);
+        const bCost = b.needed.reduce((s, c) => s + (b.needCounts[c] || 1), 0);
+        const aRatio = (a._value / aCost) || 0;
+        const bRatio = (b._value / bCost) || 0;
+        return bRatio - aRatio || (b._value - a._value);
+    });
 
-    const bestSet = [];
-    let bestScore = -Infinity;
-    const currentSet = [];
-    const counts = {};
-    Object.keys(available).forEach(k => counts[k] = available[k]);
-
-    // 🟢 GREEDY SEEDING STEP
-    (function greedySeed() {
-        const tempCounts = { ...counts };
-        let gkUsed = 0;
-        const greedySet = [];
-        let greedyScore = 0;
-
-        // Sort by value-per-card ratio descending
-        const sortedByRatio = [...expanded].sort(
-            (a, b) => (b._value / b.needed.length) - (a._value / a.needed.length)
-        );
-
-        for (const entry of sortedByRatio) {
-            if (gkLimit !== "none" && entry.isGK) {
-                const limit = parseInt(gkLimit, 10);
-                if (gkUsed >= limit) continue;
+    // helper: compute optimistic fractional upper bound from given idx and current counts
+    function fractionalUpperBound(idx, countsArr, currentGK) {
+        let bound = 0;
+        const tempCounts = countsArr.slice();
+        let gkRemaining = GK_LIMIT - currentGK;
+        for (let i = idx; i < combosPrepared.length; i++) {
+            const e = combosPrepared[i];
+            // how many full copies can we still make given tempCounts
+            let possibleCopies = Infinity;
+            for (const card of e.needed) {
+                const need = e.needCounts[card] || 1;
+                const avail = tempCounts[cardIndexMap[card]] || 0;
+                possibleCopies = Math.min(possibleCopies, Math.floor(avail / need));
             }
-
-            // check if can make with available cards
-            let canMake = true;
-            for (const card of entry.needed) {
-                if (!tempCounts[card] || tempCounts[card] <= 0) {
-                    canMake = false;
-                    break;
+            if (!isFinite(possibleCopies) || possibleCopies <= 0) {
+                // can't make a full copy now: skip
+                continue;
+            }
+            if (e.isGK) {
+                // only up to gkRemaining full copies allowed
+                possibleCopies = Math.min(possibleCopies, gkRemaining);
+            }
+            // greedily take as many full copies as possible
+            if (possibleCopies > 0) {
+                bound += possibleCopies * e._value;
+                for (const card of e.needed) {
+                    const need = e.needCounts[card] || 1;
+                    tempCounts[cardIndexMap[card]] -= possibleCopies * need;
                 }
+                if (e.isGK) gkRemaining -= possibleCopies;
             }
-            if (!canMake) continue;
-
-            // use combo
-            for (const card of entry.needed) tempCounts[card]--;
-            greedySet.push(entry.orig);
-            greedyScore += entry._value;
-            if (entry.isGK) gkUsed++;
         }
-
-        if (greedyScore > 0) {
-            bestScore = greedyScore;
-            bestSet.length = 0;
-            bestSet.push(...greedySet);
-        }
-    })();
-
-    // 🔵 BACKTRACKING WITH PRUNING
-    function backtrack(idx, currentScore, currentGKCount) {
-        if (currentScore + (suffixUpper[idx] || 0) <= bestScore) return;
-
-        if (currentScore > bestScore) {
-            bestScore = currentScore;
-            bestSet.length = 0;
-            for (let i = 0; i < currentSet.length; i++) bestSet.push(currentSet[i].orig);
-        }
-
-        for (let i = idx; i < expanded.length; i++) {
-            const entry = expanded[i];
-            if (currentScore + suffixUpper[i] <= bestScore) break;
-
-            if (gkLimit !== "none" && entry.isGK) {
-                const limit = parseInt(gkLimit, 10);
-                if (currentGKCount >= limit) continue;
+        // Fractional relaxation: try to add a fractional piece from the remaining sorted items
+        // Tends to help pruning slightly
+        for (let i = idx; i < combosPrepared.length; i++) {
+            const e = combosPrepared[i];
+            // compute a small fractional availability (sum minimal remaining fraction across its needed cards)
+            let minFrac = Infinity;
+            for (const card of e.needed) {
+                const need = e.needCounts[card] || 1;
+                const avail = tempCounts[cardIndexMap[card]] || 0;
+                minFrac = Math.min(minFrac, avail / need);
             }
+            if (minFrac > 0 && minFrac < 1) {
+                // contribution is ratio * minFrac
+                const cost = e.needed.reduce((s, c) => s + (e.needCounts[c] || 1), 0);
+                const ratio = (e._value / cost) || 0;
+                bound += ratio * cost * minFrac;
+                break;
+            }
+        }
+        return bound;
+    }
 
-            let canMake = true;
-            for (const card of entry.needed) {
-                if (!counts[card] || counts[card] <= 0) {
-                    canMake = false;
-                    break;
+    // Memoization map: key -> bestAdditionalScore (store best total score achieved from this state)
+    const memo = new Map();
+
+    // DFS that branches on counts of each combo (0..maxCopiesPossible)
+    const bestSetRes = { score: -Infinity, set: [] };
+    const currentChoiceStack = [];
+
+    function countsKey(idx, countsArr, gkCount) {
+        // create compact key using only counts for cards involved
+        return idx + '|' + gkCount + '|' + countsArr.join(',');
+    }
+
+    function dfs(idx, countsArr, currentScore, gkCount) {
+        // compute memo key
+        const key = countsKey(idx, countsArr, gkCount);
+        if (memo.has(key) && memo.get(key) >= currentScore) {
+            // been here with at least this score already
+            return;
+        }
+        memo.set(key, currentScore);
+
+        // update best
+        if (currentScore > bestSetRes.score) {
+            bestSetRes.score = currentScore;
+            bestSetRes.set = currentChoiceStack.slice();
+        }
+
+        if (idx >= combosPrepared.length) return;
+
+        // optimistic upper bound (currentScore + fractional bound)
+        const ub = currentScore + fractionalUpperBound(idx, countsArr, gkCount);
+        if (ub <= bestSetRes.score) {
+            return; // prune
+        }
+
+        const e = combosPrepared[idx];
+
+        // compute maximum possible copies of e given countsArr and GK limit
+        let maxPossible = Infinity;
+        for (const card of e.needed) {
+            const need = e.needCounts[card] || 1;
+            const avail = countsArr[cardIndexMap[card]] || 0;
+            maxPossible = Math.min(maxPossible, Math.floor(avail / need));
+        }
+        if (!isFinite(maxPossible) || maxPossible <= 0) {
+            // can't take any, skip to next
+            dfs(idx + 1, countsArr, currentScore, gkCount);
+            return;
+        }
+        if (e.isGK) {
+            maxPossible = Math.min(maxPossible, GK_LIMIT - gkCount);
+            if (maxPossible <= 0) {
+                dfs(idx + 1, countsArr, currentScore, gkCount);
+                return;
+            }
+        }
+
+        // iterate choices in descending order (try to take as many as possible first to find good solutions quickly)
+        for (let take = maxPossible; take >= 0; take--) {
+            if (take > 0) {
+                // apply the choice: decrement counts
+                for (const card of e.needed) {
+                    const need = e.needCounts[card] || 1;
+                    countsArr[cardIndexMap[card]] -= need * take;
                 }
+                if (e.isGK) gkCount += take;
+                currentChoiceStack.push({ combo: e.orig, copies: take });
+                const addedScore = take * e._value;
+                dfs(idx + 1, countsArr, currentScore + addedScore, gkCount);
+                // undo
+                currentChoiceStack.pop();
+                if (e.isGK) gkCount -= take;
+                for (const card of e.needed) {
+                    const need = e.needCounts[card] || 1;
+                    countsArr[cardIndexMap[card]] += need * take;
+                }
+            } else {
+                // take === 0, skip this combo
+                dfs(idx + 1, countsArr, currentScore, gkCount);
             }
-            if (!canMake) continue;
 
-            for (const card of entry.needed) counts[card]--;
-            currentSet.push(entry);
-
-            const nextGK = currentGKCount + (entry.isGK ? 1 : 0);
-            backtrack(i + 1, currentScore + entry._value, nextGK);
-
-            currentSet.pop();
-            for (const card of entry.needed) counts[card]++;
+            // small micro-optimization: if best is already >= currentScore + maxPossible*value, break early
+            if (bestSetRes.score >= currentScore + maxPossible * e._value) {
+                // already found as-good-or-better solution without exploring smaller take values
+                break;
+            }
         }
     }
 
-    backtrack(0, 0, 0);
-    return bestSet;
+    // start search
+    dfs(0, startCounts.slice(), 0, 0);
+
+    const finalList = [];
+    for (const item of bestSetRes.set) {
+        for (let i = 0; i < item.copies; i++) finalList.push(item.combo);
+    }
+    return finalList;
 }
 
 function totalCardsUsed(comboSet) {
