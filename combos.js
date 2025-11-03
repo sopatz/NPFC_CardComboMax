@@ -242,7 +242,7 @@ function maximizeUsage(comboList, available, mode = "cards", gkLimit = "none") {
             }
             entry._value = Math.max(0, total);
         } else {
-            entry._value = entry.needed.length;
+            entry._value = 1;
         }
     });
 
@@ -513,14 +513,15 @@ function displayResults(bestCombos, mode) {
             ["Toughness", combo.Toughness],
             ["Jumping", combo.Jumping],
             ["Willpower", combo.Willpower]
-        ].filter(([name, val]) => val && val !== "");
+        ].filter(([name, val]) => val != null && val !== "")
+         .map(([name, val]) => [name, Number(val)]);
 
         div.innerHTML = `
             <strong>${comboName}${count > 1 ? ` ×${count}` : ""}</strong> 
             (${combo.Category})<br>
             Cards: ${cardElements}<br>
             Total Skill Up: ${combo["Total skill up"]}<br>
-            ${skillUps.map(([name, val]) => `${name}: +${val}`).join(", ")}
+            ${skillUps.map(([name, val]) => `${name}: ${val > 0 ? '+' + val : val}`).join(", ")}
         `;
 
         div.appendChild(removeBtn);
@@ -540,14 +541,12 @@ function displayResults(bestCombos, mode) {
     });
 
     const totalSkillsText = Object.entries(total)
-        .filter(([_, v]) => v > 0)
-        .map(([k, v]) => `${k}: +${v}`)
+        .filter(([_, v]) => v !== 0)
+        .map(([k, v]) => `${k}: ${v > 0 ? '+' + v : v}`)
         .join(", ");
 
     const summary = document.createElement("p");
-    const modeText = mode === "skills"
-        ? `Best combo set gives a total of ${totalSkillPoints(bestCombos)} skill points across ${bestCombos.length} combos.`
-        : `Best combo set uses ${totalCardsUsed(bestCombos)} cards across ${bestCombos.length} combos.`;
+    const modeText = `Best combo set gives a total of ${totalSkillPoints(bestCombos)} skill points across ${bestCombos.length} combos and ${totalCardsUsed(bestCombos)} cards.`
 
     summary.innerHTML = `<strong>${modeText}</strong><br><em>Total skill increases:</em> ${totalSkillsText}`;
     resultsDiv.appendChild(summary);
