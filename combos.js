@@ -180,7 +180,7 @@ function findCombos() {
 }
 
 // mode = "cards" or "skills"
-function maximizeUsage(comboList, available, mode = "cards", gkLimit = "none") {
+function maximizeUsage(comboList, available, mode = "combos", gkLimit = "none") {
     // Normalize GK limit
     const GK_LIMIT = (gkLimit === "none") ? Infinity : parseInt(gkLimit, 10);
 
@@ -222,8 +222,7 @@ function maximizeUsage(comboList, available, mode = "cards", gkLimit = "none") {
 
     // compute _value for each prepared combo
     combosPrepared.forEach(entry => {
-        // Build a temporary entry-like structure to reuse original comboValue behavior
-        // if mode === "skills" sum numeric fields; else value = number of cards (for cards mode)
+        // sum numeric fields for skill increase print out
         if (mode === "skills") {
             const c = entry.orig;
             let total = 0;
@@ -266,7 +265,6 @@ function maximizeUsage(comboList, available, mode = "cards", gkLimit = "none") {
             const avail = startCounts[cardIndexMap[card]] || 0;
             maxCopies = Math.min(maxCopies, Math.floor(avail / need));
         }
-        entry.maxCopiesInit = isFinite(maxCopies) ? maxCopies : 0;
     });
 
     // Sort combos by value-per-card (descending) to get better pruning and fractional upper bound calculations
