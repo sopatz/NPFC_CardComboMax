@@ -115,9 +115,14 @@ function createCardInput(card, savedValue = "0") {
     const input = document.createElement("input");
     input.type = "number";
     input.min = "0";
-    input.max = "10";
+    input.max = "9";
     input.value = savedValue;
     input.id = `card-${card.replace(/\s+/g, "_")}`;
+
+    input.addEventListener("input", () => {
+        if (input.value > 9) input.value = 9;
+        if (input.value < 0) input.value = 0;
+    });
 
     div.appendChild(label);
     div.appendChild(input);
@@ -514,7 +519,7 @@ function displayResults(bestCombos, mode) {
             ["Jumping", combo.Jumping],
             ["Willpower", combo.Willpower]
         ].filter(([name, val]) => val != null && val !== "")
-         .map(([name, val]) => [name, Number(val)]);
+            .map(([name, val]) => [name, Number(val)]);
 
         div.innerHTML = `
             <strong>${comboName}${count > 1 ? ` ×${count}` : ""}</strong> 
