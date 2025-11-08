@@ -129,6 +129,26 @@ button:hover {
     background: #b02a37;
 }
 
+/* Layout for the sort/filter section */
+.sort-and-type {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5em;
+}
+
+.sort-and-type label {
+    white-space: nowrap;
+}
+
+.apply-btn {
+    padding: 8px 20px;        /* Smaller button height and width */
+    font-size: 0.9em;        /* Slightly smaller text */
+    border-radius: 6px;
+    margin-top: 1.1em;
+}
+
+
 /* --- Mobile stylings --- */
 @media (max-width: 600px) {
     body {
@@ -241,6 +261,23 @@ button:hover {
     .removeBtn:hover {
         background: #c0392b10;
         opacity: 1;
+    }
+    
+    .sort-and-type {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .sort-and-type select {
+        width: 100%;
+        max-width: 320px;
+    }
+
+    .apply-btn {
+        width: 100%;
+        margin-top: 0.8em;
+        padding: normal;
+        font-size: 1rem;
     }
 
 }

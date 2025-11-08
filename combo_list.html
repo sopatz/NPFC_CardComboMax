@@ -19,25 +19,27 @@
     </p>
 
     <div id="sort-controls" style="margin-bottom: 1em;">
-        <label for="sort-select"><strong>Sort by:</strong></label>
-        <select id="sort-select">
-            <option value="alpha">Alphabetical (A–Z)</option>
-            <option value="skill">Total Skill Up (High → Low)</option>
-            <option value="custom">Custom Skill Sort</option>
-        </select>
+        <div class="sort-and-type">
+            <label for="sort-select"><strong>Sort by:</strong></label>
+            <select id="sort-select">
+                <option value="alpha">Alphabetical (A–Z)</option>
+                <option value="skill">Total Skill Up (High → Low)</option>
+                <option value="custom">Custom Skill Sort</option>
+            </select>
 
-        <label for="type-filter" style="margin-left: 1em;"><strong>Filter by Type:</strong></label>
-        <select id="type-filter">
-            <option value="all">All</option>
-            <option value="Attacking">Attacking</option>
-            <option value="Celebration">Celebration</option>
-            <option value="Defending">Defending</option>
-            <option value="Fitness">Fitness</option>
-            <option value="GK">GK</option>
-            <option value="Midfield">Midfield</option>
-            <option value="Mindset">Mindset</option>
-            <option value="Skill">Skill</option>
-        </select>
+            <label for="type-filter" style="margin-left: 1em;"><strong>Filter by Type:</strong></label>
+            <select id="type-filter">
+                <option value="all">All</option>
+                <option value="Attacking">Attacking</option>
+                <option value="Celebration">Celebration</option>
+                <option value="Defending">Defending</option>
+                <option value="Fitness">Fitness</option>
+                <option value="GK">GK</option>
+                <option value="Midfield">Midfield</option>
+                <option value="Mindset">Mindset</option>
+                <option value="Skill">Skill</option>
+            </select>
+        </div>
 
         <!-- Skill checkboxes (hidden until "Custom" is selected) -->
         <div id="custom-skill-controls" style="margin-top: 0.5em; display: none;">
@@ -50,7 +52,7 @@
             <label><input type="checkbox" value="Jumping"> Jumping</label>
             <label><input type="checkbox" value="Willpower"> Willpower</label>
             <br>
-            <button id="apply-skill-sort" style="margin-top: 0.5em;">Apply Skill Sort</button>
+            <button id="apply-skill-sort" class="apply-btn">Apply Skill Sort</button>
         </div>
     </div>
 
