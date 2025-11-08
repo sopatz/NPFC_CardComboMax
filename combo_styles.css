@@ -141,6 +141,10 @@ button:hover {
     white-space: nowrap;
 }
 
+.type-filter-label {
+    margin-left: 1em;
+}
+
 .apply-btn {
     padding: 8px 20px;        /* Smaller button height and width */
     font-size: 0.9em;        /* Slightly smaller text */
@@ -275,6 +279,11 @@ button:hover {
 
     .sort-and-type label {
         margin-left: unset;
+    }
+
+    .type-filter-label {
+        margin-left: 0;
+        margin-top: 0.5em;
     }
 
     .apply-btn {
