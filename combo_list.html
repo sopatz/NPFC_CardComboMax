@@ -23,8 +23,24 @@
         <select id="sort-select">
             <option value="alpha">Alphabetical (A–Z)</option>
             <option value="skill">Total Skill Up (High → Low)</option>
+            <option value="custom">Custom Skill Sort</option>
         </select>
+
+        <!-- New skill checkboxes (hidden until "Custom" is selected) -->
+        <div id="custom-skill-controls" style="margin-top: 0.5em; display: none;">
+            <p><strong>Select skills to sort by:</strong></p>
+            <label><input type="checkbox" value="Kicking"> Kicking</label>
+            <label><input type="checkbox" value="Speed"> Speed</label>
+            <label><input type="checkbox" value="Stamina"> Stamina</label>
+            <label><input type="checkbox" value="Technique"> Technique</label>
+            <label><input type="checkbox" value="Toughness"> Toughness</label>
+            <label><input type="checkbox" value="Jumping"> Jumping</label>
+            <label><input type="checkbox" value="Willpower"> Willpower</label>
+            <br>
+            <button id="apply-skill-sort" style="margin-top: 0.5em;">Apply Skill Sort</button>
+        </div>
     </div>
+
 
     <div id="results"></div>
 
