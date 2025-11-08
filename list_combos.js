@@ -63,7 +63,8 @@ function getSelectedSkillSum(combo, selectedSkills) {
 }
 
 // Render the combo list
-function renderCombosList(sortMode = "alpha", selectedSkills = []) {
+// Renders the combo list with sorting and filtering
+function renderCombosList(sortMode = "alpha", selectedSkills = [], selectedType = "all") {
     const resultsDiv = document.getElementById("results");
     resultsDiv.innerHTML = "";
 
@@ -72,39 +73,48 @@ function renderCombosList(sortMode = "alpha", selectedSkills = []) {
         return;
     }
 
-    let sorted = [...combos];
+    let filtered = [...combos];
 
+    // Filter by selected combo type
+    if (selectedType !== "all") {
+        filtered = filtered.filter(c => {
+            const cat = (c.Category || "").trim().toLowerCase();
+            return cat === selectedType.toLowerCase();
+        });
+    }
+
+    // Sort list
     if (sortMode === "skill") {
-        sorted.sort((a, b) => (parseFloat(b["Total skill up"]) || 0) - (parseFloat(a["Total skill up"]) || 0));
+        filtered.sort((a, b) => (parseFloat(b["Total skill up"]) || 0) - (parseFloat(a["Total skill up"]) || 0));
     } 
     else if (sortMode === "custom") {
-        // Filter to only combos that have some value > 0 in selected skills
-        sorted = sorted.filter(combo => getSelectedSkillSum(combo, selectedSkills) > 0);
-        // Then sort by sum of selected skills
-        sorted.sort((a, b) => getSelectedSkillSum(b, selectedSkills) - getSelectedSkillSum(a, selectedSkills));
+        filtered = filtered.filter(combo => 
+            selectedSkills.some(skill => (parseFloat(combo[skill]) || 0) !== 0)
+        );
+        filtered.sort((a, b) => getSelectedSkillSum(b, selectedSkills) - getSelectedSkillSum(a, selectedSkills));
     } 
     else {
-        sorted.sort((a, b) => {
+        filtered.sort((a, b) => {
             const nameA = (a["Combo Name"] || a.ComboName || "").toLowerCase();
             const nameB = (b["Combo Name"] || b.ComboName || "").toLowerCase();
             return nameA.localeCompare(nameB);
         });
     }
 
-    if (sorted.length === 0) {
-        resultsDiv.textContent = "No combos match the selected skill criteria.";
+    if (filtered.length === 0) {
+        resultsDiv.textContent = "No combos match the selected criteria.";
         return;
     }
 
     const ul = document.createElement("ul");
     ul.style.listStyleType = "none";
     ul.style.paddingLeft = "0";
-    sorted.forEach(combo => renderComboItem(combo, ul));
+    filtered.forEach(combo => renderComboItem(combo, ul));
     resultsDiv.appendChild(ul);
 
-    // ✅ Updated summary
     const summary = document.createElement("p");
-    let summaryText = `${sorted.length} combos listed`;
+    let summaryText = `${filtered.length} combos listed`;
+    if (selectedType !== "all") summaryText += ` (Type: ${selectedType})`;
     if (sortMode === "skill") summaryText += " (by Total Skill Up)";
     if (sortMode === "custom" && selectedSkills.length > 0)
         summaryText += ` (filtered and sorted by combined ${selectedSkills.join(", ")})`;
@@ -123,30 +133,39 @@ document.addEventListener("DOMContentLoaded", () => {
             const sortSelect = document.getElementById("sort-select");
             const customControls = document.getElementById("custom-skill-controls");
             const applyBtn = document.getElementById("apply-skill-sort");
+            const typeFilter = document.getElementById("type-filter");
 
-            // Dropdown change
-            if (sortSelect) {
-                sortSelect.addEventListener("change", () => {
-                    const mode = sortSelect.value;
-                    customControls.style.display = mode === "custom" ? "block" : "none";
-                    if (mode !== "custom") renderCombosList(mode);
-                });
-            }
+            // Track current filters so multiple controls can combine
+            let currentSort = "alpha";
+            let currentSkills = [];
+            let currentType = "all";
+
+            // Sort dropdown
+            sortSelect.addEventListener("change", () => {
+                currentSort = sortSelect.value;
+                customControls.style.display = currentSort === "custom" ? "block" : "none";
+                if (currentSort !== "custom")
+                    renderCombosList(currentSort, currentSkills, currentType);
+            });
+
+            // Type filter dropdown
+            typeFilter.addEventListener("change", () => {
+                currentType = typeFilter.value;
+                renderCombosList(currentSort, currentSkills, currentType);
+            });
 
             // Apply custom skill sort
-            if (applyBtn) {
-                applyBtn.addEventListener("click", () => {
-                    const selectedSkills = Array.from(
-                        document.querySelectorAll('#custom-skill-controls input[type="checkbox"]:checked')
-                    ).map(cb => cb.value);
+            applyBtn.addEventListener("click", () => {
+                currentSkills = Array.from(
+                    document.querySelectorAll('#custom-skill-controls input[type="checkbox"]:checked')
+                ).map(cb => cb.value);
 
-                    if (selectedSkills.length === 0) {
-                        alert("Please select at least one skill to sort by.");
-                        return;
-                    }
-                    renderCombosList("custom", selectedSkills);
-                });
-            }
+                if (currentSkills.length === 0) {
+                    alert("Please select at least one skill to sort by.");
+                    return;
+                }
+                renderCombosList("custom", currentSkills, currentType);
+            });
         },
         error: (err) => {
             document.getElementById("results").innerText = "Error loading CSV: " + err.message;

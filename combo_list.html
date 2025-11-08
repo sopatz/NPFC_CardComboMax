@@ -26,7 +26,20 @@
             <option value="custom">Custom Skill Sort</option>
         </select>
 
-        <!-- New skill checkboxes (hidden until "Custom" is selected) -->
+        <label for="type-filter" style="margin-left: 1em;"><strong>Filter by Type:</strong></label>
+        <select id="type-filter">
+            <option value="all">All</option>
+            <option value="Attacking">Attacking</option>
+            <option value="Celebration">Celebration</option>
+            <option value="Defending">Defending</option>
+            <option value="Fitness">Fitness</option>
+            <option value="GK">GK</option>
+            <option value="Midfield">Midfield</option>
+            <option value="Mindset">Mindset</option>
+            <option value="Skill">Skill</option>
+        </select>
+
+        <!-- Skill checkboxes (hidden until "Custom" is selected) -->
         <div id="custom-skill-controls" style="margin-top: 0.5em; display: none;">
             <p><strong>Select skills to sort by:</strong></p>
             <label><input type="checkbox" value="Kicking"> Kicking</label>
