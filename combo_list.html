@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NPFC Card Combo List</title>
+    <link rel="stylesheet" href="combo_styles.css">
+    <link rel="icon" href="tab-icon.png" type="image/png">
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script defer src="list_combos.js"></script>
+</head>
+
+<body>
+    <h1>All NPFC Card Combos</h1>
+
+    <p>
+        <a href="combinator.html">Back to Card Combo Maximizer Tool</a>
+    </p>
+
+    <div id="sort-controls" style="margin-bottom: 1em;">
+        <label for="sort-select"><strong>Sort by:</strong></label>
+        <select id="sort-select">
+            <option value="alpha">Alphabetical (A–Z)</option>
+            <option value="skill">Total Skill Up (High → Low)</option>
+        </select>
+    </div>
+
+    <div id="results"></div>
+
+    <footer>
+        <hr>
+        <p><a href="#">Back to Top</a> | <a href="combinator.html">Back to Card Combo Maximizer Tool</a></p>
+        <p><em>Created by: Seth Opatz, 11/08/2025</em></p>
+    </footer>
+</body>
+
+</html>
