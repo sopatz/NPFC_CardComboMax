@@ -62,7 +62,6 @@ function getSelectedSkillSum(combo, selectedSkills) {
     }, 0);
 }
 
-// Render the combo list
 // Renders the combo list with sorting and filtering
 function renderCombosList(sortMode = "alpha", selectedSkills = [], selectedType = "all") {
     const resultsDiv = document.getElementById("results");
@@ -83,10 +82,156 @@ function renderCombosList(sortMode = "alpha", selectedSkills = [], selectedType 
         });
     }
 
+    // Defining the in-game order of card combos
+    const inGameComboOrder = [
+        "Dribbling Shot",
+        "Controlled Shot",
+        "Volley Shot",
+        "Banana Shot",
+        "Rocket Shot",
+        "Blind Shot",
+        "Bicycle Kick",
+        "Midfield Strike",
+        "Knuckle Shot",
+        "Super Long Shot",
+        "Miracle Loop",
+        "Driving Shot",
+        "Shadow Striker",
+        "Fast Dribble",
+        "Rapid Dribbling",
+        "Shock Dribble",
+        "Phantom Dribbler",
+        "Headed Shot",
+        "Explosive Header",
+        "Sliding Header",
+        "Aerial Specialist",
+        "Target Man",
+        "Hold Up Play",
+        "First-Touch Pass",
+        "Pin-Point Pass",
+        "Velvet Pass",
+        "No-Look Pass",
+        "Killer Pass",
+        "Linked Partners",
+        "Last Gasp Pass",
+        "Tricky Feint",
+        "Magic Trapping",
+        "Magnet Trapping",
+        "Ball Control",
+        "Body Balance",
+        "Body of Steel",
+        "Bodywork",
+        "Wing Change",
+        "Long Pass",
+        "Homing Cross",
+        "Long Throw",
+        "Scissors Feint",
+        "Pivot Turn",
+        "Roulette Turn",
+        "Feint Steps",
+        "Attack Waves",
+        "2nd Strike",
+        "Compact Field",
+        "Trick Play",
+        "Eye Contact",
+        "Vocal Tactics",
+        "Marking Transfer",
+        "Triangle",
+        "Chasing",
+        "Intercepting",
+        "Impulse Play",
+        "Diagonal Run",
+        "Wing Attack",
+        "Overlapping",
+        "Open Space",
+        "Rapid Turnaround",
+        "Offside Trap",
+        "Wing Block",
+        "Flowing Football",
+        "Total Football",
+        "Rush Attack",
+        "Open the Gates",
+        "Superior Numbers",
+        "Holding Ground",
+        "Covering",
+        "Blocking",
+        "Brick Wall",
+        "Dogged Marker",
+        "Iron Defence",
+        "Risky Block",
+        "Gutsy Clearance",
+        "Deadly Slide",
+        "Star Takedown",
+        "Tough Midfielder",
+        "Relentless Pressure",
+        "The Chain",
+        "Strategist",
+        "Attack Pivot",
+        "Control Tower",
+        "Star Striker",
+        "Goal Sniffer",
+        "FK Master",
+        "Free Kick Legend",
+        "Last Trump",
+        "Lucky Chance",
+        "Wonder Boy",
+        "Pitch Director",
+        "Football Professor",
+        "Ball Magician",
+        "Hard Dynamo",
+        "Midfield Maestro",
+        "Wild Man",
+        "Mood Maker",
+        "Trickery",
+        "Multitool",
+        "Super Sub",
+        "Captaincy",
+        "Hungry for Glory",
+        "Commander",
+        "Heart of Steel",
+        "Determination",
+        "Keen Coaching",
+        "Wild Rage",
+        "Iron Fist",
+        "Team Rally",
+        "Team Love",
+        "Last Gasp Miracle",
+        "Ultra Relaxation",
+        "Super-Refreshment",
+        "Fan Service",
+        "Titanic Goalie (GK)",
+        "Super Save (GK)",
+        "Desperate Saves (GK)",
+        "Goalie Runs Up (GK)",
+        "Blind Plane",
+        "Rock-A-Bye",
+        "Samba Steps",
+        "Acrobatics",
+        "Golden Feet",
+        "Choo-Choo Train"
+    ];
+
     // Sort list
     if (sortMode === "skill") {
         filtered.sort((a, b) => (parseFloat(b["Total skill up"]) || 0) - (parseFloat(a["Total skill up"]) || 0));
     } 
+    else if (sortMode === "in-game") {
+        // Sort combos according to in-game order outlined above
+        filtered.sort((a, b) => {
+            const nameA = (a["Combo Name"] || a.ComboName || "").trim();
+            const nameB = (b["Combo Name"] || b.ComboName || "").trim();
+
+            const indexA = inGameComboOrder.indexOf(nameA);
+            const indexB = inGameComboOrder.indexOf(nameB);
+
+            // Hidden combos (ones not in the defined in-game list) go at the end, alphabetically
+            if (indexA === -1 && indexB === -1) return nameA.localeCompare(nameB);
+            if (indexA === -1) return 1;
+            if (indexB === -1) return -1;
+
+            return indexA - indexB;
+        });
+    }
     else if (sortMode === "custom") {
         filtered = filtered.filter(combo => 
             selectedSkills.some(skill => (parseFloat(combo[skill]) || 0) !== 0)
@@ -116,6 +261,7 @@ function renderCombosList(sortMode = "alpha", selectedSkills = [], selectedType 
     let summaryText = `${filtered.length} combos listed`;
     if (selectedType !== "all") summaryText += ` (Type: ${selectedType})`;
     if (sortMode === "skill") summaryText += " (by Total Skill Up)";
+    if (sortMode === "in-game") summaryText += " (by In-Game Order)";
     if (sortMode === "custom" && selectedSkills.length > 0)
         summaryText += ` (filtered and sorted by combined ${selectedSkills.join(", ")})`;
     summary.innerHTML = `<strong>${summaryText}</strong>`;

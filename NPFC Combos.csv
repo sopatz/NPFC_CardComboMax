@@ -17,7 +17,7 @@ Bodywork,Fitness,Weights,Sprinting,Stretching,15,5,1,,,8,1,
 Brick Wall,Defending,Kicking,Meditation,,18,,,4,,10,,4
 Captaincy,Skill,Running,Meeting,,20,,,10,,,,10
 Chasing,Midfield,Pressuring,Aerobics,,20,,6,8,,6,,
-ChooChoo Train,Celebration,Line Control,Stretching,Spa,19,,4,2,,7,2,4
+Choo-Choo Train,Celebration,Line Control,Stretching,Spa,19,,4,2,,7,2,4
 Commander,Mindset,Sprinting,Judo,,17,2,4,4,3,4,,
 Compact Field,Midfield,Pressuring,Line Control,,12,,4,4,,,,4
 Control Tower,Mindset,Mini-Game,Mini-Camp,,14,2,,4,2,,,6
@@ -43,7 +43,7 @@ Flowing Football,Skill,Mini-Game,Passing,Agility,19,3,10,,6,,,
 Football Professor,Mindset,Analysis,Set Plays,Gaming,18,4,4,,2,,,8
 Free Kick Legend,Skill,Place Kicks,Visualising,Mini-Camp,21,11,,,,,,10
 Goal Sniffer,Attacking,Oil Therapy,Meditation,Visualising,17,3,4,,3,,3,4
-Goalie Bullying (H),GK,Line Control,Shooting,Sliding,2,-2,,,8,,-2,-2
+Goalie Bullying (H),Skill,Line Control,Shooting,Sliding,2,-2,,,8,,-2,-2
 Goalie Runs Up (GK),GK,Set Plays,Running,Karaoke,20,12,,8,,,,
 Golden Feet,Skill,Pressuring,Kicking,Meeting,15,2,2,1,2,4,,4
 Gutsy Clearance,Defending,Heading,Stretching,Judo,30,,6,,,4,10,10
@@ -65,7 +65,7 @@ Knuckle Shot,Attacking,Shooting,Oil Therapy,Mini-Camp,15,6,,,3,,,6
 Last Gasp Miracle,Mindset,Countering,Set Plays,Judo,24,2,4,,2,,,16
 Last Gasp Pass,Midfield,Countering,Passing,Meditation,22,,6,4,4,,,8
 Last Trump,Mindset,Set Plays,Passing,Spa,26,8,8,,,6,,4
-Late Tackle,Attacking,Pressuring,Kicking,Karaoke,8,12,,,-2,,,-2
+Late Tackle (H),Attacking,Pressuring,Kicking,Karaoke,8,12,,,-2,,,-2
 Linked Partners,Skill,Passing,Aerobics,Mini-Camp,22,,6,8,4,2,,2
 Long Pass,Midfield,Place Kicks,Weights,,18,8,,,,6,,4
 Long Throw,Skill,Weights,Aerobics,Spa,26,,6,,4,12,,4
@@ -105,7 +105,7 @@ Star Striker,Attacking,Place Kicks,Aerobics,Signing,20,10,,,4,6,,
 Star Takedown,Defending,Marking,Sliding,Sprinting,30,,12,6,2,10,,
 Strategist,Mindset,Passing,Gaming,,15,,6,,3,,,6
 Super Long Shot,Attacking,Shooting,Kicking,Gaming,17,8,,,1,4,,4
-Super Refreshment,Fitness,Aerobics,Oil Therapy,Karaoke,22,,,12,2,,,8
+Super-Refreshment,Fitness,Aerobics,Oil Therapy,Karaoke,22,,,12,2,,,8
 Super Save (GK),GK,Heading,Meditation,,20,,,4,,,8,8
 Super Sub,Mindset,Sprinting,PK Practice,,17,3,8,,,,6,
 Superior Numbers,Mindset,Line Control,Agility,,18,,5,5,,,4,4
