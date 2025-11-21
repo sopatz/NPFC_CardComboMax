@@ -269,12 +269,22 @@ function maximizeUsage(comboList, available, mode = "combos", gkLimit = "none") 
 
     // Sort combos by value-per-card (descending) to get better pruning and fractional upper bound calculations
     combosPrepared.sort((a, b) => {
-        const aCost = a.needed.reduce((s, c) => s + (a.needCounts[c] || 1), 0);
-        const bCost = b.needed.reduce((s, c) => s + (b.needCounts[c] || 1), 0);
+        const aCost = a.needed.length;
+        const bCost = b.needed.length;
+
         const aRatio = (a._value / aCost) || 0;
         const bRatio = (b._value / bCost) || 0;
-        return bRatio - aRatio || (b._value - a._value);
+
+        const diffRatio = bRatio - aRatio;
+        if (diffRatio !== 0) return diffRatio;
+
+        const diffValue = b._value - a._value;
+        if (diffValue !== 0) return diffValue;
+
+        // tie → random
+        return Math.random() < 0.5 ? -1 : 1;
     });
+
 
     // helper: compute optimistic fractional upper bound from given idx and current counts
     function fractionalUpperBound(idx, countsArr, currentGK) {
