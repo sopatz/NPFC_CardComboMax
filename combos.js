@@ -483,7 +483,27 @@ function displayResults(bestCombos, mode) {
         comboCounts[key].count++;
     });
 
-    Object.values(comboCounts).forEach(({ combo, count }) => {
+    // Helper to read numeric "Total skill up" (supports several possible field names)
+    function getComboTotalSkillUp(combo) {
+        const raw = combo["Total skill up"] ?? combo.TotalSkillUp ?? combo["Total Skill Up"] ?? 0;
+        const n = parseFloat(raw);
+        return isNaN(n) ? 0 : n;
+    }
+
+    // Convert grouped object to array and sort by total skill up (descending),
+    // tie-break by count (descending), then combo name (asc)
+    const grouped = Object.values(comboCounts);
+    grouped.sort((a, b) => {
+        const aVal = getComboTotalSkillUp(a.combo);
+        const bVal = getComboTotalSkillUp(b.combo);
+        if (bVal !== aVal) return bVal - aVal;
+        if (b.count !== a.count) return b.count - a.count;
+        const aName = (a.combo["Combo Name"] || "").toString();
+        const bName = (b.combo["Combo Name"] || "").toString();
+        return aName.localeCompare(bName);
+    });
+
+    grouped.forEach(({ combo, count }) => {
         const comboName = combo["Combo Name"];
         const div = document.createElement("div");
         div.className = "comboResult";
