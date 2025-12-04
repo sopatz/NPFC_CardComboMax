@@ -1,32 +1,32 @@
 Combo Name,Category,card1,card2,card3,Total skill up,Kicking,Speed,Stamina,Technique,Toughness,Jumping,Willpower
 2nd Strike,Attacking,Pressuring,Sprinting,,14,4,4,,2,,4,
-Acrobatics,Fitness,Countering,Aerobics,Stretching,21,,6,5,2,6,2,
+Acrobatics,Celebration,Countering,Aerobics,Stretching,21,,6,5,2,6,2,
 Aerial Specialist,Skill,Set Plays,Heading,Kicking,26,2,,,2,6,16,
-Attack Pivot,Attacking,Dribbling,PK Practice,,8,4,,2,2,,,
+Attack Pivot,Attacking,Dribbling,PK Practice,,14,4,6,2,2,,,
 Attack Waves,Attacking,Mini-Game,Running,,16,2,4,4,2,,,4
 Ball Control,Skill,Freestyling,Running,Meditation,26,,6,6,8,6,,
 Ball Magician,Skill,Place Kicks,Freestyling,Heading,15,7,,,8,,,
-Banana Shot,Attacking,Place Kicks,Shooting,,4,,,,,,,4
+Banana Shot,Attacking,Place Kicks,Shooting,,15,11,,,,,,4
 Bicycle Kick,Attacking,Shooting,Aerobics,Judo,20,4,,6,4,6,,
-Blind Plane,Skill,Set Plays,Freestyling,Weights,14,3,,,5,4,,2
+Blind Plane,Celebration,Set Plays,Freestyling,Weights,14,3,,,5,4,,2
 Blind Shot,Attacking,Marking,Shooting,,8,5,,,3,,,
 Blocking,Defending,Sliding,Stretching,,22,,6,,2,8,,6
 Body Balance,Fitness,Freestyling,Kicking,,14,,,,7,7,,
 Body of Steel,Fitness,Analysis,Weights,Kicking,23,4,,,3,16,,
 Bodywork,Fitness,Weights,Sprinting,Stretching,15,5,1,,,8,1,
-Brick Wall,Defending,Kicking,Meditation,,18,,,4,,10,,4
-Captaincy,Skill,Running,Meeting,,20,,,10,,,,10
+Brick Wall,Defending,Kicking,Meditation,,18,,,,4,10,,4
+Captaincy,Mindset,Running,Meeting,,20,,,10,,,,10
 Chasing,Midfield,Pressuring,Aerobics,,20,,6,8,,6,,
 Choo-Choo Train,Celebration,Line Control,Stretching,Spa,19,,4,2,,7,2,4
-Commander,Mindset,Sprinting,Judo,,17,2,4,4,3,4,,
+Commander,Mindset,Sprinting,Judo,,17,2,4,,3,4,,4
 Compact Field,Midfield,Pressuring,Line Control,,12,,4,4,,,,4
 Control Tower,Mindset,Mini-Game,Mini-Camp,,14,2,,4,2,,,6
 Controlled Shot,Attacking,Shooting,Freestyling,,11,6,,,5,,,
-Covering,Defending,Line Control,Sprinting,,22,2,,4,,10,6,
+Covering,Defending,Line Control,Sprinting,,18,2,6,4,,,6,
 Deadly Slide,Defending,Sliding,Kicking,Judo,11,3,,,7,1,,
 Desperate Saves (GK),GK,Aerobics,Meditation,PK Practice,22,,,4,8,,,10
-Determination,Mindset,Pressuring,Meditation,,4,,,,3,,,1
-Diagonal Run,Midfield,Running,Visualising,,10,,3,6,,,,1
+Determination,Mindset,Pressuring,Meditation,,13,,,,3,,,10
+Diagonal Run,Midfield,Running,Visualising,,21,,6,8,1,,,6
 Diving (H),Skill,Shooting,Agility,Visualising,16,,24,-4,,,,-4
 Dogged Marker,Defending,Marking,Running,,22,,4,10,,4,,4
 Dribbling Shot,Attacking,Dribbling,Shooting,,15,6,6,,3,,,
@@ -45,12 +45,12 @@ Free Kick Legend,Skill,Place Kicks,Visualising,Mini-Camp,21,11,,,,,,10
 Goal Sniffer,Attacking,Oil Therapy,Meditation,Visualising,17,3,4,,3,,3,4
 Goalie Bullying (H),Skill,Line Control,Shooting,Sliding,2,-2,,,8,,-2,-2
 Goalie Runs Up (GK),GK,Set Plays,Running,Karaoke,20,12,,8,,,,
-Golden Feet,Skill,Pressuring,Kicking,Meeting,15,2,2,1,2,4,,4
-Gutsy Clearance,Defending,Heading,Stretching,Judo,30,,6,,,4,10,10
+Golden Feet,Celebration,Pressuring,Kicking,Meeting,15,2,2,1,2,4,,4
+Gutsy Clearance,Defending,Heading,Stretching,Judo,32,,6,,2,4,10,10
 Hand of God (H),Attacking,Pressuring,Shooting,Heading,7,12,,,-1,,,-4
 Hard Dynamo,Fitness,Pressuring,Running,Agility,29,,10,14,5,,,
 Headed Shot,Attacking,Heading,Agility,,23,3,,,,6,14,
-Heart of Steel,Mindset,PK Practice,Judo,,16,3,,1,,,,12
+Heart of Steel,Mindset,PK Practice,Judo,,16,3,,,1,,,12
 Hold Up Play,Attacking,Passing,Heading,,14,,,,6,8,,
 Holding Ground,Defending,Mini-Game,Aerobics,,14,,,6,4,4,,
 Homing Cross,Midfield,Place Kicks,Kicking,Mini-Camp,24,6,4,4,2,4,,4
@@ -60,16 +60,16 @@ Intercepting,Defending,Sliding,Visualising,,14,,,,4,6,,4
 Iron Defence,Defending,Marking,Pressuring,,12,,,5,2,5,,
 Iron Fist,Fitness,Marking,Weights,Judo,23,5,,,,12,,6
 Keen Coaching,Mindset,Mini-Game,Line Control,Judo,20,,,6,4,,,10
-Killer Pass,Skill,Passing,Kicking,Oil Therapy,20,2,5,3,5,5,,
+Killer Pass,Skill,Passing,Kicking,Oil Therapy,20,2,5,,5,5,,3
 Knuckle Shot,Attacking,Shooting,Oil Therapy,Mini-Camp,15,6,,,3,,,6
 Last Gasp Miracle,Mindset,Countering,Set Plays,Judo,24,2,4,,2,,,16
 Last Gasp Pass,Midfield,Countering,Passing,Meditation,22,,6,4,4,,,8
-Last Trump,Mindset,Set Plays,Passing,Spa,26,8,8,,,6,,4
+Last Trump,Mindset,Set Plays,Passing,Spa,26,8,8,,,6,4,
 Late Tackle (H),Attacking,Pressuring,Kicking,Karaoke,8,12,,,-2,,,-2
 Linked Partners,Skill,Passing,Aerobics,Mini-Camp,22,,6,8,4,2,,2
 Long Pass,Midfield,Place Kicks,Weights,,18,8,,,,6,,4
-Long Throw,Skill,Weights,Aerobics,Spa,26,,6,,4,12,,4
-Lucky Chance,Mindset,Countering,Signing,PK Practice,7,5,1,,1,,,
+Long Throw,Skill,Weights,Aerobics,Spa,26,,,6,4,12,,4
+Lucky Chance,Mindset,Countering,Signing,PK Practice,16,5,10,,1,,,
 Magic Trapping,Skill,Freestyling,Judo,,10,,,,6,,,4
 Magnet Trapping,Skill,Freestyling,Stretching,Visualising,22,,6,,8,4,,4
 Marking Transfer,Defending,Marking,Gaming,,12,,,4,2,2,,4
@@ -93,7 +93,7 @@ Rapid Turnaround,Skill,Countering,Sliding,,12,,6,,3,3,,
 Relentless Pressure,Mindset,Pressuring,Weights,Mini-Camp,24,,6,8,2,,,8
 Risky Block,Defending,Sliding,Meditation,,16,,,,2,6,,8
 Rock-A-Bye,Celebration,Marking,Mini-Game,Oil Therapy,10,1,,2,1,2,2,2
-Rocket Shot,Attacking,Shooting,Running,,12,5,6,,1,,,
+Rocket Shot,Attacking,Shooting,Running,,18,5,6,6,1,,,
 Roulette Turn,Skill,Agility,Stretching,Gaming,32,,12,4,4,8,,4
 Rush Attack,Attacking,Dribbling,Passing,Signing,29,3,10,6,4,,6,
 Samba Steps,Celebration,Analysis,Sliding,Agility,16,2,3,,3,3,4,1
@@ -114,7 +114,7 @@ Team Love,Mindset,Oil Therapy,Signing,Meeting,20,,,,,,,20
 Team Rally,Mindset,Marking,Meeting,Karaoke,20,,4,4,,,4,8
 The Chain,Defending,Analysis,Marking,Line Control,20,2,4,6,2,6,,
 Time Wasting (H),Skill,Place Kicks,Running,Spa,16,,-4,24,,,-2,-2
-Titanic Goalie (GK),GK,Set Plays,Agility,,7,,,,2,,1,4
+Titanic Goalie (GK),GK,Set Plays,Agility,,16,,,,2,,10,4
 Total Football,Mindset,Line Control,Dribbling,Mini-Camp,21,3,3,3,3,3,3,3
 Tough Midfielder,Midfield,Pressuring,Dribbling,Sliding,25,3,6,6,4,6,,
 Triangle,Skill,Analysis,Passing,,10,1,6,,3,,,
@@ -127,7 +127,7 @@ Vocal Tactics,Mindset,Line Control,Karaoke,,13,,,4,1,,,8
 Volley Shot,Attacking,Shooting,Stretching,,11,9,,,2,,,
 Wild Man,Fitness,Running,Aerobics,Sprinting,38,,20,20,,,,-2
 Wild Rage,Fitness,Marking,Kicking,Agility,22,2,,,6,8,6,
-Wing Attack,Midfield,Dribbling,Running,,8,,1,1,,2,,4
+Wing Attack,Midfield,Dribbling,Running,,26,,10,10,,2,,4
 Wing Block,Midfield,Pressuring,Visualising,,11,,3,,3,,,5
 Wing Change,Midfield,Analysis,Place Kicks,,16,4,,6,,,,6
 Wonder Boy,Mindset,Countering,Oil Therapy,Gaming,13,3,6,,4,,,
