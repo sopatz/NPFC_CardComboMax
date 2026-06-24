@@ -187,6 +187,7 @@ function findCombos() {
     // Don't move on to maximizing usage if listing all combos
     if (mode === "all") {
         currentAllModeCards = { ...cardCounts };
+        lastMode = "all";
         displayAllPossibleCombos();
         return;
     }
