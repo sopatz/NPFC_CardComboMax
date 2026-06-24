@@ -3,6 +3,9 @@ const CSV_FILE = "NPFC Combos.csv";
 let combos = [];
 let uniqueCards = new Set();
 let currentAllModeCards = {};
+let lastMode = null;
+let lastBestCombos = [];
+let lastCardCounts = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     Papa.parse(CSV_FILE, {
@@ -20,6 +23,11 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("sortSelect").addEventListener("change", buildCardInputs);
     document.getElementById("findCombosBtn").addEventListener("click", findCombos);
     document.getElementById("resetBtn").addEventListener("click", resetCards);
+    document.addEventListener("change", (e) => {
+        if (e.target.classList.contains("skillSort")) {
+            rerenderResults();
+        }
+    });
 });
 
 function extractCards() {
@@ -191,7 +199,20 @@ function findCombos() {
         gkLimitValue
     );
 
+    lastMode = mode;
+    lastBestCombos = bestSet;
+    lastCardCounts = { ...cardCounts };
+
     displayResults(bestSet, mode);
+}
+
+function rerenderResults() {
+    if (!lastMode) return;
+    if (lastMode === "all") {
+        displayAllPossibleCombos();
+    } else {
+        displayResults(lastBestCombos, lastMode);
+    }
 }
 
 // Calculate all currently make-able combos from current inventory
@@ -206,8 +227,57 @@ function getMakeableCombos(cardCounts) {
     });
 }
 
+function getSelectedSortSkills() {
+    return Array.from(
+        document.querySelectorAll(".skillSort:checked")
+    ).map(cb => cb.value);
+}
+
+function sortCombosForDisplay(comboList) {
+    const selectedSkills = getSelectedSortSkills();
+
+    // No skills selected -> existing behavior
+    if (selectedSkills.length === 0) {
+        comboList.sort((a, b) => {
+            const aVal = parseFloat(a["Total skill up"]) || 0;
+            const bVal = parseFloat(b["Total skill up"]) || 0;
+            return bVal - aVal;
+        });
+        return;
+    }
+
+    comboList.sort((a, b) => {
+
+        const aSkillTotal = selectedSkills.reduce(
+            (sum, skill) => sum + (Number(a[skill]) || 0),
+            0
+        );
+
+        const bSkillTotal = selectedSkills.reduce(
+            (sum, skill) => sum + (Number(b[skill]) || 0),
+            0
+        );
+
+        if (bSkillTotal !== aSkillTotal) {
+            return bSkillTotal - aSkillTotal;
+        }
+
+        // Tie-breaker: total skill up
+        const aTotal = parseFloat(a["Total skill up"]) || 0;
+        const bTotal = parseFloat(b["Total skill up"]) || 0;
+
+        if (bTotal !== aTotal) {
+            return bTotal - aTotal;
+        }
+
+        return (a["Combo Name"] || "")
+            .localeCompare(b["Combo Name"] || "");
+    });
+}
+
 // Get set of all combos possible with user's current cards
 function displayAllPossibleCombos() {
+    const skillSortContainer = document.getElementById("skillSortContainer");
     const resultsDiv = document.getElementById("results");
     resultsDiv.innerHTML = "";
 
@@ -215,16 +285,13 @@ function displayAllPossibleCombos() {
 
     // Display message to user if no combos can be made
     if (comboList.length === 0) {
+        skillSortContainer.style.display = "none";
         resultsDiv.textContent = "No more combos can be made with the remaining cards.";
         return;
     }
 
     // Sort by total skill up descending
-    comboList.sort((a, b) => {
-        const aVal = parseFloat(a["Total skill up"]) || 0;
-        const bVal = parseFloat(b["Total skill up"]) || 0;
-        return bVal - aVal;
-    });
+    sortCombosForDisplay(comboList);
 
     comboList.forEach(combo => {
         const comboName = combo["Combo Name"];
@@ -282,6 +349,7 @@ function displayAllPossibleCombos() {
         .filter(([name, val]) => val != null && val !== "")
         .map(([name, val]) => [name, Number(val)]);
 
+        skillSortContainer.style.display = "block";
         div.innerHTML = `
             <strong>${comboName}</strong>
             (${combo.Category})<br>
@@ -583,15 +651,20 @@ function resetCards() {
         input.value = "0";
     });
 
+    const skillSortContainer = document.getElementById("skillSortContainer");
+    skillSortContainer.style.display = "none";
+
     const resultsDiv = document.getElementById("results");
     resultsDiv.innerHTML = "";
 }
 
 function displayResults(bestCombos, mode) {
+    const skillSortContainer = document.getElementById("skillSortContainer");
     const resultsDiv = document.getElementById("results");
     resultsDiv.innerHTML = "";
 
     if (bestCombos.length === 0) {
+        skillSortContainer.style.display = "none";
         resultsDiv.textContent = "No full combos can be made with your current cards.";
         return;
     }
@@ -614,14 +687,29 @@ function displayResults(bestCombos, mode) {
     // Convert grouped object to array and sort by total skill up (descending),
     // tie-break by count (descending), then combo name (asc)
     const grouped = Object.values(comboCounts);
+    const selectedSkills = getSelectedSortSkills();
     grouped.sort((a, b) => {
-        const aVal = getComboTotalSkillUp(a.combo);
-        const bVal = getComboTotalSkillUp(b.combo);
-        if (bVal !== aVal) return bVal - aVal;
-        if (b.count !== a.count) return b.count - a.count;
-        const aName = (a.combo["Combo Name"] || "").toString();
-        const bName = (b.combo["Combo Name"] || "").toString();
-        return aName.localeCompare(bName);
+        if (selectedSkills.length > 0) {
+            const aSkillTotal = selectedSkills.reduce((sum, skill) => sum + (Number(a.combo[skill]) || 0), 0);
+            const bSkillTotal = selectedSkills.reduce((sum, skill) => sum + (Number(b.combo[skill]) || 0), 0);
+
+            if (bSkillTotal !== aSkillTotal) {
+                return bSkillTotal - aSkillTotal;
+            }
+        }
+
+        const aTotal = getComboTotalSkillUp(a.combo);
+        const bTotal = getComboTotalSkillUp(b.combo);
+
+        if (bTotal !== aTotal) {
+            return bTotal - aTotal;
+        }
+
+        if (b.count !== a.count) {
+            return b.count - a.count;
+        }
+
+        return (a.combo["Combo Name"] || "").localeCompare(b.combo["Combo Name"] || "");
     });
 
     grouped.forEach(({ combo, count }) => {
@@ -670,6 +758,7 @@ function displayResults(bestCombos, mode) {
         ].filter(([name, val]) => val != null && val !== "")
             .map(([name, val]) => [name, Number(val)]);
 
+        skillSortContainer.style.display = "block";
         div.innerHTML = `
             <strong>${comboName}${count > 1 ? ` ×${count}` : ""}</strong> 
             (${combo.Category})<br>
@@ -700,7 +789,9 @@ function displayResults(bestCombos, mode) {
         .join(", ");
 
     const summary = document.createElement("p");
-    const modeText = `Best combo set gives a total of ${totalSkillPoints(bestCombos)} skill points across ${bestCombos.length} combos and ${totalCardsUsed(bestCombos)} cards.`
+
+    const isBestMode = mode === "skills";
+    const modeText = `${isBestMode ? "Best c" : "C"}ombo set gives a total of ${totalSkillPoints(bestCombos)} skill points across ${bestCombos.length} combos and ${totalCardsUsed(bestCombos)} cards.`;
 
     summary.innerHTML = `<strong>${modeText}</strong><br><em>Total skill increases:</em> ${totalSkillsText}`;
     resultsDiv.appendChild(summary);

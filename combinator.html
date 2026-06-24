@@ -27,12 +27,14 @@
         <label><input type="radio" name="optMode" value="skills" checked>Maximize Number of Skill Points</label><br>
         <label><input type="radio" name="optMode" value="cards">Randomize the Combo Set</label><br>
         <label><input type="radio" name="optMode" value="all">Show All Possible Combos</label>
+
         <br><br><strong>GK Combo Limit:</strong><br>
         <select id="gkLimitSelect">
             <option value="none">No limit</option>
             <option value="1">Limit to 1 GK combo</option>
             <option value="2" selected>Limit to 2 GK combos</option>
         </select>
+
         <br><br><strong>Sort Cards By:</strong><br>
         <select id="sortSelect">
             <option value="color" selected>Color (Card Type)</option>
@@ -44,6 +46,17 @@
     <div id="buttonContainer">
         <button id="findCombosBtn">Find Combos</button>
         <button id="resetBtn">Reset Cards</button>
+    </div>
+
+    <div id="skillSortContainer" style="display:none; margin-top:46px;">
+        <strong>Sort Displayed Combos By:</strong><br>
+        <label><input type="checkbox" class="skillSort" value="Kicking"> Kicking</label>
+        <label><input type="checkbox" class="skillSort" value="Speed"> Speed</label>
+        <label><input type="checkbox" class="skillSort" value="Stamina"> Stamina</label>
+        <label><input type="checkbox" class="skillSort" value="Technique"> Technique</label>
+        <label><input type="checkbox" class="skillSort" value="Toughness"> Toughness</label>
+        <label><input type="checkbox" class="skillSort" value="Jumping"> Jumping</label>
+        <label><input type="checkbox" class="skillSort" value="Willpower"> Willpower</label><br>
     </div>
 
     <div id="results"></div>
