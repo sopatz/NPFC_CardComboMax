@@ -174,8 +174,9 @@ function findCombos() {
     });
 
     const mode = document.querySelector('input[name="optMode"]:checked').value;
+    const excludeHidden = document.getElementById("noHiddenCheckbox").checked;
 
-    const makeableCombos = combos.filter(combo => {
+    let makeableCombos = combos.filter(combo => {
         const cardsNeeded = [combo.card1, combo.card2, combo.card3]
             .filter(c => c && c.trim() !== "");
 
@@ -190,6 +191,12 @@ function findCombos() {
         lastMode = "all";
         displayAllPossibleCombos();
         return;
+    }
+
+    if (excludeHidden) {
+        makeableCombos = makeableCombos.filter(combo => {
+            return !(combo["Combo Name"] || "").toUpperCase().includes("(H)");
+        });
     }
 
     const gkLimitValue = document.getElementById("gkLimitSelect").value;
