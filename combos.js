@@ -2,6 +2,7 @@ const CSV_FILE = "NPFC Combos.csv";
 
 let combos = [];
 let uniqueCards = new Set();
+let currentAllModeCards = {};
 
 document.addEventListener("DOMContentLoaded", () => {
     Papa.parse(CSV_FILE, {
@@ -152,9 +153,10 @@ function getCardColor(cardName) {
     return { bg: "#eaeaea", text: "#333" };
 }
 
-
+// Find the combo set to display to the user
 function findCombos() {
     const cardCounts = {};
+
     document.querySelectorAll("#cardList input").forEach(input => {
         const count = parseInt(input.value);
         if (count > 0) {
@@ -163,20 +165,139 @@ function findCombos() {
         }
     });
 
-    // Read optimization mode
     const mode = document.querySelector('input[name="optMode"]:checked').value;
 
-    // Filter combos that are fully makeable with current inventory
     const makeableCombos = combos.filter(combo => {
-        const cardsNeeded = [combo.card1, combo.card2, combo.card3].filter(c => c && c.trim() !== "");
-        return cardsNeeded.every(c => cardCounts[c.trim()] && cardCounts[c.trim()] > 0);
+        const cardsNeeded = [combo.card1, combo.card2, combo.card3]
+            .filter(c => c && c.trim() !== "");
+
+        return cardsNeeded.every(c =>
+            cardCounts[c.trim()] && cardCounts[c.trim()] > 0
+        );
     });
 
-    // Optimize based on mode
+    // Don't move on to maximizing usage if listing all combos
+    if (mode === "all") {
+        currentAllModeCards = { ...cardCounts };
+        displayAllPossibleCombos();
+        return;
+    }
+
     const gkLimitValue = document.getElementById("gkLimitSelect").value;
-    const bestSet = maximizeUsage(makeableCombos, cardCounts, mode, gkLimitValue);
+    const bestSet = maximizeUsage(
+        makeableCombos,
+        cardCounts,
+        mode,
+        gkLimitValue
+    );
 
     displayResults(bestSet, mode);
+}
+
+// Calculate all currently make-able combos from current inventory
+function getMakeableCombos(cardCounts) {
+    return combos.filter(combo => {
+        const cardsNeeded = [combo.card1, combo.card2, combo.card3]
+            .filter(c => c && c.trim() !== "");
+
+        return cardsNeeded.every(card =>
+            (cardCounts[card.trim()] || 0) > 0
+        );
+    });
+}
+
+// Get set of all combos possible with user's current cards
+function displayAllPossibleCombos() {
+    const resultsDiv = document.getElementById("results");
+    resultsDiv.innerHTML = "";
+
+    const comboList = getMakeableCombos(currentAllModeCards);
+
+    // Display message to user if no combos can be made
+    if (comboList.length === 0) {
+        resultsDiv.textContent = "No more combos can be made with the remaining cards.";
+        return;
+    }
+
+    // Sort by total skill up descending
+    comboList.sort((a, b) => {
+        const aVal = parseFloat(a["Total skill up"]) || 0;
+        const bVal = parseFloat(b["Total skill up"]) || 0;
+        return bVal - aVal;
+    });
+
+    comboList.forEach(combo => {
+        const comboName = combo["Combo Name"];
+
+        const div = document.createElement("div");
+        div.className = "comboResult";
+        div.style.marginBottom = "10px";
+        div.style.padding = "8px";
+        div.style.borderBottom = "1px solid #ccc";
+        div.dataset.comboName = comboName;
+
+        // Remove button
+        const removeBtn = document.createElement("button");
+        removeBtn.textContent = "Remove";
+        removeBtn.className = "removeBtn";
+        removeBtn.addEventListener("click", () => {
+            // Consume cards used by this combo
+            [combo.card1, combo.card2, combo.card3]
+                .filter(card => card && card.trim() !== "")
+                .forEach(card => {
+                    const name = card.trim();
+                    if (currentAllModeCards[name] > 0) {
+                        currentAllModeCards[name]--;
+                    }
+                });
+            // Regenerate entire list
+            displayAllPossibleCombos();
+        });
+
+        // Color each card individually
+        const cardElements = [combo.card1, combo.card2, combo.card3]
+            .filter(x => x && x.trim() !== "")
+            .map(cardName => {
+                const color = getCardColor(cardName);
+                return `<span style="
+                    background-color:${color.bg};
+                    color:${color.text};
+                    padding:2px 6px;
+                    border-radius:4px;
+                    margin-right:4px;
+                    display:inline-block;
+                ">${cardName}</span>`;
+            })
+            .join("");
+
+        const skillUps = [
+            ["Kicking", combo.Kicking],
+            ["Speed", combo.Speed],
+            ["Stamina", combo.Stamina],
+            ["Technique", combo.Technique],
+            ["Toughness", combo.Toughness],
+            ["Jumping", combo.Jumping],
+            ["Willpower", combo.Willpower]
+        ]
+        .filter(([name, val]) => val != null && val !== "")
+        .map(([name, val]) => [name, Number(val)]);
+
+        div.innerHTML = `
+            <strong>${comboName}</strong>
+            (${combo.Category})<br>
+            Cards: ${cardElements}<br>
+            Total Skill Up: ${combo["Total skill up"]}<br>
+            ${skillUps.map(([name, val]) => `${name}: ${val > 0 ? '+' + val : val}`).join(", ")}
+        `;
+
+        div.appendChild(removeBtn);
+        resultsDiv.appendChild(div);
+    });
+
+    const summary = document.createElement("p");
+    summary.innerHTML =
+        `<strong>${comboList.length} possible combos found.</strong>`;
+    resultsDiv.appendChild(summary);
 }
 
 // mode = "cards" or "skills"
