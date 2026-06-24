@@ -176,13 +176,6 @@ button:hover {
         line-height: 1.2;
     }
 
-    #cardListHeader {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-        font-size: 0.9em;
-    }
-
     .cardItem {
         flex-direction: column;
         align-items: flex-start;
