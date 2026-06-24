@@ -6,6 +6,7 @@ let currentAllModeCards = {};
 let lastMode = null;
 let lastBestCombos = [];
 let lastCardCounts = null;
+let removedCombos = new Set();
 
 document.addEventListener("DOMContentLoaded", () => {
     Papa.parse(CSV_FILE, {
@@ -210,6 +211,7 @@ function findCombos() {
     lastMode = mode;
     lastBestCombos = bestSet;
     lastCardCounts = { ...cardCounts };
+    removedCombos.clear();
 
     displayResults(bestSet, mode);
 }
@@ -679,7 +681,11 @@ function displayResults(bestCombos, mode) {
 
     // Group duplicates
     const comboCounts = {};
-    bestCombos.forEach(c => {
+    const filteredCombos = bestCombos.filter(
+        c => !removedCombos.has(c["Combo Name"])
+    );
+
+    filteredCombos.forEach(c => {
         const key = c["Combo Name"];
         comboCounts[key] = comboCounts[key] || { combo: c, count: 0 };
         comboCounts[key].count++;
@@ -734,9 +740,16 @@ function displayResults(bestCombos, mode) {
         removeBtn.textContent = "Remove";
         removeBtn.className = "removeBtn";
         removeBtn.addEventListener("click", () => {
+            const key = combo["Combo Name"];
+
+            removedCombos.add(key);
+
             div.style.transition = "opacity 0.3s ease";
             div.style.opacity = "0";
-            setTimeout(() => div.remove(), 300);
+
+            setTimeout(() => {
+                div.remove();
+            }, 300);
         });
 
         // Color each card individually
@@ -784,7 +797,7 @@ function displayResults(bestCombos, mode) {
         Kicking: 0, Speed: 0, Stamina: 0, Technique: 0,
         Toughness: 0, Jumping: 0, Willpower: 0
     };
-    bestCombos.forEach(c => {
+    filteredCombos.forEach(c => {
         for (let key in total) {
             const val = parseFloat(c[key]) || 0;
             total[key] += val;
