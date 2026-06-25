@@ -6,7 +6,7 @@ let currentAllModeCards = {};
 let lastMode = null;
 let lastBestCombos = [];
 let lastCardCounts = null;
-let removedCombos = new Set();
+let removedComboCounts = {};
 
 document.addEventListener("DOMContentLoaded", () => {
     Papa.parse(CSV_FILE, {
@@ -211,7 +211,7 @@ function findCombos() {
     lastMode = mode;
     lastBestCombos = bestSet;
     lastCardCounts = { ...cardCounts };
-    removedCombos.clear();
+    removedComboCounts = {};
 
     displayResults(bestSet, mode);
 }
@@ -265,48 +265,6 @@ function getSelectedSortSkills() {
     return Array.from(
         document.querySelectorAll(".skillSort:checked")
     ).map(cb => cb.value);
-}
-
-function sortCombosForDisplay(comboList) {
-    const selectedSkills = getSelectedSortSkills();
-
-    // No skills selected -> existing behavior
-    if (selectedSkills.length === 0) {
-        comboList.sort((a, b) => {
-            const aVal = parseFloat(a["Total skill up"]) || 0;
-            const bVal = parseFloat(b["Total skill up"]) || 0;
-            return bVal - aVal;
-        });
-        return;
-    }
-
-    comboList.sort((a, b) => {
-
-        const aSkillTotal = selectedSkills.reduce(
-            (sum, skill) => sum + (Number(a[skill]) || 0),
-            0
-        );
-
-        const bSkillTotal = selectedSkills.reduce(
-            (sum, skill) => sum + (Number(b[skill]) || 0),
-            0
-        );
-
-        if (bSkillTotal !== aSkillTotal) {
-            return bSkillTotal - aSkillTotal;
-        }
-
-        // Tie-breaker: total skill up
-        const aTotal = parseFloat(a["Total skill up"]) || 0;
-        const bTotal = parseFloat(b["Total skill up"]) || 0;
-
-        if (bTotal !== aTotal) {
-            return bTotal - aTotal;
-        }
-
-        return (a["Combo Name"] || "")
-            .localeCompare(b["Combo Name"] || "");
-    });
 }
 
 function fadeOutAndRemove(element, duration = 300, callback) {
@@ -751,6 +709,10 @@ function resetCards() {
     resultsDiv.innerHTML = "";
 }
 
+function getComboCount(list, name) {
+    return list.filter(c => c["Combo Name"] === name).length;
+}
+
 function displayResults(bestCombos, mode) {
     const skillSortContainer = document.getElementById("skillSortContainer");
     const resultsDiv = document.getElementById("results");
@@ -764,9 +726,20 @@ function displayResults(bestCombos, mode) {
 
     // Group duplicates
     const comboCounts = {};
-    const filteredCombos = bestCombos.filter(
-        c => !removedCombos.has(c["Combo Name"])
-    );
+    const filteredCombos = [];
+    const tempCounts = {};
+
+    bestCombos.forEach(c => {
+        const name = c["Combo Name"];
+        tempCounts[name] = (tempCounts[name] || 0);
+
+        const removedCount = removedComboCounts[name] || 0;
+
+        if (tempCounts[name] < (getComboCount(bestCombos, name) - removedCount)) {
+            filteredCombos.push(c);
+            tempCounts[name]++;
+        }
+    });
 
     filteredCombos.forEach(c => {
         const key = c["Combo Name"];
@@ -820,19 +793,32 @@ function displayResults(bestCombos, mode) {
 
         // Remove button
         const removeBtn = document.createElement("button");
-        removeBtn.textContent = "Remove";
         removeBtn.className = "removeBtn";
+        removeBtn.textContent = "Remove One";
+
         removeBtn.addEventListener("click", () => {
-            const key = combo["Combo Name"];
+            const name = combo["Combo Name"];
+            const currentRemoved = removedComboCounts[name] || 0;
 
-            removedCombos.add(key);
+            const isLastCopy = count === 1;
 
-            div.style.transition = "opacity 0.3s ease";
-            div.style.opacity = "0";
+            if (isLastCopy) {
+                fadeOutAndRemove(div, 300, () => {
+                    removedComboCounts[name] = currentRemoved + 1;
+                    displayResults(lastBestCombos, lastMode);
+                });
+            } else {
+                const countSpan = div.querySelector(".comboCount");
 
-            setTimeout(() => {
-                div.remove();
-            }, 300);
+                if (countSpan) {
+                    countSpan.classList.add("bump");
+                }
+
+                setTimeout(() => {
+                    removedComboCounts[name] = currentRemoved + 1;
+                    displayResults(lastBestCombos, lastMode);
+                }, 180);
+            }
         });
 
         // Color each card individually
@@ -864,7 +850,10 @@ function displayResults(bestCombos, mode) {
 
         skillSortContainer.style.display = "block";
         div.innerHTML = `
-            <strong>${comboName}${count > 1 ? ` ×${count}` : ""}</strong> 
+            <strong>
+                ${comboName}
+                <span class="comboCount">${count > 1 ? `×${count}` : ""}</span>
+            </strong>
             (${combo.Category})<br>
             Cards: ${cardElements}<br>
             Total Skill Up: ${combo["Total skill up"]}<br>
