@@ -5,7 +5,6 @@ let uniqueCards = new Set();
 let currentAllModeCards = {};
 let lastMode = null;
 let lastBestCombos = [];
-let lastCardCounts = null;
 let removedComboCounts = {};
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -21,7 +20,6 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("cardList").innerText = "Error loading CSV: " + err.message;
         }
     });
-    document.getElementById("sortSelect").addEventListener("change", buildCardInputs);
     document.getElementById("findCombosBtn").addEventListener("click", findCombos);
     document.getElementById("resetBtn").addEventListener("click", resetCards);
     document.addEventListener("change", (e) => {
@@ -31,141 +29,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-function extractCards() {
-    combos.forEach(combo => {
-        ["card1", "card2", "card3"].forEach(key => {
-            const card = combo[key]?.trim();
-            if (card) uniqueCards.add(card);
-        });
-    });
-}
 
-function buildCardInputs() {
-    const container = document.getElementById("cardList");
-
-    // Save current input values before rebuilding
-    const savedValues = {};
-    document.querySelectorAll("#cardList input").forEach(input => {
-        const cardName = input.id.replace(/^card-/, "").replace(/_/g, " ");
-        savedValues[cardName] = input.value;
-    });
-
-    container.innerHTML = "";
-
-    const sortMode = document.getElementById("sortSelect")?.value || "alpha";
-    let sortedCards = Array.from(uniqueCards);
-
-    // Category definitions (must match getCardColor)
-    const categories = {
-        "Tactical": ["Analysis", "Marking", "Pressuring", "Countering", "Mini-Game", "Line Control", "Set Plays"],
-        "Technical": ["Dribbling", "Place Kicks", "Shooting", "Passing", "Freestyling", "Sliding", "Heading"],
-        "Physical": ["Running", "Weights", "Kicking", "Sprinting", "Agility", "Aerobics", "Stretching"],
-        "Support": ["Oil Therapy", "Meditation", "Signing", "PK Practice", "Judo", "Visualising", "Meeting", "Spa", "Mini-Camp", "Gaming", "Karaoke"]
-    };
-
-    // Determine order based on selected mode
-    if (sortMode === "color") {
-        const categorized = [];
-        for (const arr of Object.values(categories)) {
-            categorized.push(...arr.filter(c => sortedCards.includes(c)));
-        }
-        const uncategorized = sortedCards.filter(c => !categorized.includes(c));
-        sortedCards = [...categorized, ...uncategorized];
-    } else {
-        sortedCards.sort();
-    }
-
-    // Add category headings and cards
-    const addCategoryHeading = (title) => {
-        const heading = document.createElement("div");
-        heading.textContent = title;
-        heading.className = "categoryHeading";
-        container.appendChild(heading);
-    };
-
-
-    if (sortMode === "color") {
-        for (const [title, cards] of Object.entries(categories)) {
-            const filtered = cards.filter(c => sortedCards.includes(c));
-            if (filtered.length > 0) {
-                addCategoryHeading(title);
-                filtered.forEach(card => container.appendChild(createCardInput(card, savedValues[card])));
-            }
-        }
-
-        // Add uncategorized section (if any)
-        const uncategorized = sortedCards.filter(c =>
-            !Object.values(categories).some(list => list.includes(c))
-        );
-        if (uncategorized.length > 0) {
-            addCategoryHeading("Other Cards");
-            uncategorized.forEach(card => container.appendChild(createCardInput(card, savedValues[card])));
-        }
-    } else {
-        sortedCards.forEach(card => container.appendChild(createCardInput(card, savedValues[card])));
-    }
-}
-
-function createCardInput(card, savedValue = "0") {
-    const div = document.createElement("div");
-    div.className = "cardItem";
-
-    const label = document.createElement("label");
-    label.textContent = card;
-
-    const color = getCardColor(card);
-    label.style.backgroundColor = color.bg;
-    label.style.color = color.text;
-    label.style.padding = "4px 8px";
-    label.style.borderRadius = "4px";
-    label.style.marginRight = "10px";
-    label.style.minWidth = "140px";
-    label.style.textAlign = "center";
-
-    const input = document.createElement("input");
-    input.type = "number";
-    input.min = "0";
-    input.max = "9";
-    input.value = savedValue;
-    input.id = `card-${card.replace(/\s+/g, "_")}`;
-
-    input.addEventListener("input", () => {
-        if (input.value > 9) input.value = 9;
-        if (input.value < 0) input.value = 0;
-    });
-
-    div.appendChild(label);
-    div.appendChild(input);
-
-    return div;
-}
-
-// Helper function to assign colors by card category
-function getCardColor(cardName) {
-    const tactical = ["Analysis", "Marking", "Pressuring", "Countering", "Mini-Game", "Line Control", "Set Plays"];
-    const technical = ["Dribbling", "Place Kicks", "Shooting", "Passing", "Freestyling", "Sliding", "Heading"];
-    const physical = ["Running", "Weights", "Kicking", "Sprinting", "Agility", "Aerobics", "Stretching"];
-    const support = ["Oil Therapy", "Meditation", "Signing", "PK Practice", "Judo", "Visualising", "Meeting", "Spa", "Mini-Camp", "Gaming", "Karaoke"];
-
-    const name = cardName.trim();
-
-    if (tactical.includes(name))
-        return { bg: "#c9f5c4", text: "#2f5b2f" }; // green
-    if (technical.includes(name))
-        return { bg: "#ffcaca", text: "#661a1a" }; // red
-    if (physical.includes(name))
-        return { bg: "#cae1ff", text: "#1a3b66" }; // blue
-    if (support.includes(name))
-        return { bg: "#fff5c2", text: "#665c1a" }; // yellow
-
-    // Default (if card not categorized)
-    return { bg: "#eaeaea", text: "#333" };
-}
+// ==================
+//   Core App Logic  
+// ==================
 
 // Find the combo set to display to the user
 function findCombos() {
     const cardCounts = {};
-
     document.querySelectorAll("#cardList input").forEach(input => {
         const count = parseInt(input.value);
         if (count > 0) {
@@ -212,7 +83,6 @@ function findCombos() {
 
     lastMode = mode;
     lastBestCombos = bestSet;
-    lastCardCounts = { ...cardCounts };
     removedComboCounts = {};
 
     displayResults(bestSet, mode);
@@ -227,199 +97,21 @@ function rerenderResults() {
     }
 }
 
-// Calculate all currently make-able combos from current inventory
-function getMakeableCombos(cardCounts) {
-    const result = [];
-
-    combos.forEach(combo => {
-        const cardsNeeded = [combo.card1, combo.card2, combo.card3]
-            .filter(c => c && c.trim() !== "")
-            .map(c => c.trim());
-
-        if (cardsNeeded.length === 0) return;
-
-        // Count how many of each card this combo needs
-        const needCounts = {};
-        cardsNeeded.forEach(c => {
-            needCounts[c] = (needCounts[c] || 0) + 1;
-        });
-
-        // Determine max copies possible
-        let maxCopies = Infinity;
-
-        for (const card in needCounts) {
-            const needed = needCounts[card];
-            const available = cardCounts[card] || 0;
-
-            maxCopies = Math.min(maxCopies, Math.floor(available / needed));
-        }
-
-        // Add combo multiple times
-        for (let i = 0; i < maxCopies; i++) {
-            result.push(combo);
-        }
+function resetCards() {
+    document.querySelectorAll("#cardList input").forEach(input => {
+        input.value = "0";
     });
-
-    return result;
-}
-
-function getSelectedSortSkills() {
-    return Array.from(
-        document.querySelectorAll(".skillSort:checked")
-    ).map(cb => cb.value);
-}
-
-function fadeOutAndRemove(element, duration = 300, callback) {
-    element.style.transition = `opacity ${duration}ms ease`;
-    element.style.opacity = "0";
-
-    setTimeout(() => {
-        if (callback) callback();
-    }, duration);
-}
-
-// Get set of all combos possible with user's current cards
-function displayAllPossibleCombos() {
     const skillSortContainer = document.getElementById("skillSortContainer");
+    skillSortContainer.style.display = "none";
+
     const resultsDiv = document.getElementById("results");
     resultsDiv.innerHTML = "";
-
-    const comboList = getMakeableCombos(currentAllModeCards);
-
-    // Group duplicates (combos that can be made more than once)
-    const comboCounts = {};
-    comboList.forEach(c => {
-        const key = c["Combo Name"];
-        comboCounts[key] = comboCounts[key] || { combo: c, count: 0 };
-        comboCounts[key].count++;
-    });
-
-    // Convert to array
-    let grouped = Object.values(comboCounts);
-
-    // Display message to user if no combos can be made
-    if (comboList.length === 0) {
-        skillSortContainer.style.display = "none";
-        resultsDiv.textContent = "No more combos can be made with the remaining cards.";
-        return;
-    }
-
-    const selectedSkills = getSelectedSortSkills();
-    grouped.sort((a, b) => {
-        if (selectedSkills.length > 0) {
-            const aSkillTotal = selectedSkills.reduce((sum, skill) => sum + (Number(a.combo[skill]) || 0), 0);
-            const bSkillTotal = selectedSkills.reduce((sum, skill) => sum + (Number(b.combo[skill]) || 0), 0);
-
-            if (bSkillTotal !== aSkillTotal) {
-                return bSkillTotal - aSkillTotal;
-            }
-        }
-
-        const aTotal = parseFloat(a.combo["Total skill up"]) || 0;
-        const bTotal = parseFloat(b.combo["Total skill up"]) || 0;
-
-        if (bTotal !== aTotal) return bTotal - aTotal;
-
-        return (a.combo["Combo Name"] || "")
-            .localeCompare(b.combo["Combo Name"] || "");
-    });
-
-    grouped.forEach(({ combo, count }) => {
-        const comboName = combo["Combo Name"];
-
-        const div = document.createElement("div");
-        div.className = "comboResult";
-        div.style.marginBottom = "10px";
-        div.style.padding = "8px";
-        div.style.borderBottom = "1px solid #ccc";
-        div.dataset.comboName = comboName;
-
-        // Remove button
-        const removeBtn = document.createElement("button");
-        removeBtn.textContent = "Remove One";
-        removeBtn.className = "removeBtn";
-        removeBtn.addEventListener("click", () => {
-            const isLastCopy = count === 1;
-            if (isLastCopy) {
-                fadeOutAndRemove(div, 300, () => {
-                    [combo.card1, combo.card2, combo.card3]
-                        .filter(card => card && card.trim() !== "")
-                        .forEach(card => {
-                            const name = card.trim();
-                            if (currentAllModeCards[name] > 0) {
-                                currentAllModeCards[name]--;
-                            }
-                        });
-                    displayAllPossibleCombos();
-                });
-            } else {
-                const countSpan = div.querySelector(".comboCount");
-                if (countSpan) {
-                    countSpan.classList.add("bump");
-                }
-                setTimeout(() => {
-                    [combo.card1, combo.card2, combo.card3]
-                        .filter(card => card && card.trim() !== "")
-                        .forEach(card => {
-                            const name = card.trim();
-                            if (currentAllModeCards[name] > 0) {
-                                currentAllModeCards[name]--;
-                            }
-                        });
-                    displayAllPossibleCombos();
-                }, 180);
-            }
-        });
-
-        // Color each card individually
-        const cardElements = [combo.card1, combo.card2, combo.card3]
-            .filter(x => x && x.trim() !== "")
-            .map(cardName => {
-                const color = getCardColor(cardName);
-                return `<span style="
-                    background-color:${color.bg};
-                    color:${color.text};
-                    padding:2px 6px;
-                    border-radius:4px;
-                    margin-right:4px;
-                    display:inline-block;
-                ">${cardName}</span>`;
-            })
-            .join("");
-
-        const skillUps = [
-            ["Kicking", combo.Kicking],
-            ["Speed", combo.Speed],
-            ["Stamina", combo.Stamina],
-            ["Technique", combo.Technique],
-            ["Toughness", combo.Toughness],
-            ["Jumping", combo.Jumping],
-            ["Willpower", combo.Willpower]
-        ]
-        .filter(([name, val]) => val != null && val !== "")
-        .map(([name, val]) => [name, Number(val)]);
-
-        skillSortContainer.style.display = "block";
-        div.innerHTML = `
-            <strong>
-                ${comboName}
-                <span class="comboCount">${count > 1 ? `×${count}` : ""}</span>
-            </strong>
-            (${combo.Category})<br>
-            Cards: ${cardElements}<br>
-            Total Skill Up: ${combo["Total skill up"]}<br>
-            ${skillUps.map(([name, val]) => `${name}: ${val > 0 ? '+' + val : val}`).join(", ")}
-        `;
-
-        div.appendChild(removeBtn);
-        resultsDiv.appendChild(div);
-    });
-
-    const summary = document.createElement("p");
-    summary.innerHTML =
-        `<strong>${comboList.length} possible combos found.</strong>`;
-    resultsDiv.appendChild(summary);
 }
+
+
+// ==============
+//   Algorithms
+// ==============
 
 // mode = "cards" or "skills"
 function maximizeUsage(comboList, available, mode = "combos", gkLimit = "none", comboLimit = "none") {
@@ -499,16 +191,6 @@ function maximizeUsage(comboList, available, mode = "combos", gkLimit = "none", 
     for (const [card, idx] of Object.entries(cardIndexMap)) {
         startCounts[idx] = available[card] || 0;
     }
-
-    // Precompute maxCopies per combo based on initial available (upper bound)
-    combosPrepared.forEach(entry => {
-        let maxCopies = Infinity;
-        for (const card of entry.needed) {
-            const need = entry.needCounts[card] || 1;
-            const avail = startCounts[cardIndexMap[card]] || 0;
-            maxCopies = Math.min(maxCopies, Math.floor(avail / need));
-        }
-    });
 
     // Sort combos by value-per-card (descending) to get better pruning and fractional upper bound calculations
     combosPrepared.sort((a, b) => {
@@ -699,39 +381,53 @@ function maximizeUsage(comboList, available, mode = "combos", gkLimit = "none", 
     return finalList;
 }
 
-function totalCardsUsed(comboSet) {
-    let count = 0;
-    comboSet.forEach(c => {
-        const cards = [c.card1, c.card2, c.card3].filter(x => x && x.trim() !== "");
-        count += cards.length;
+// Calculate all currently make-able combos from current inventory
+function getMakeableCombos(cardCounts) {
+    const result = [];
+
+    combos.forEach(combo => {
+        const cardsNeeded = [combo.card1, combo.card2, combo.card3]
+            .filter(c => c && c.trim() !== "")
+            .map(c => c.trim());
+
+        if (cardsNeeded.length === 0) return;
+
+        // Count how many of each card this combo needs
+        const needCounts = {};
+        cardsNeeded.forEach(c => {
+            needCounts[c] = (needCounts[c] || 0) + 1;
+        });
+
+        // Determine max copies possible
+        let maxCopies = Infinity;
+
+        for (const card in needCounts) {
+            const needed = needCounts[card];
+            const available = cardCounts[card] || 0;
+            maxCopies = Math.min(maxCopies, Math.floor(available / needed));
+        }
+
+        // Add combo multiple times
+        for (let i = 0; i < maxCopies; i++) {
+            result.push(combo);
+        }
     });
-    return count;
+    return result;
 }
 
-function totalSkillPoints(comboSet) {
-    let total = 0;
-    comboSet.forEach(c => {
-        const val = parseFloat(c["Total skill up"] || c.TotalSkillUp || c["Total Skill Up"]);
-        if (!isNaN(val)) total += val;
+function extractCards() {
+    combos.forEach(combo => {
+        ["card1", "card2", "card3"].forEach(key => {
+            const card = combo[key]?.trim();
+            if (card) uniqueCards.add(card);
+        });
     });
-    return total;
 }
 
-function resetCards() {
-    document.querySelectorAll("#cardList input").forEach(input => {
-        input.value = "0";
-    });
 
-    const skillSortContainer = document.getElementById("skillSortContainer");
-    skillSortContainer.style.display = "none";
-
-    const resultsDiv = document.getElementById("results");
-    resultsDiv.innerHTML = "";
-}
-
-function getComboCount(list, name) {
-    return list.filter(c => c["Combo Name"] === name).length;
-}
+// ==============================
+//   Visual Rendering Functions
+// ==============================
 
 function displayResults(bestCombos, mode) {
     const skillSortContainer = document.getElementById("skillSortContainer");
@@ -745,27 +441,27 @@ function displayResults(bestCombos, mode) {
     }
 
     // Group duplicates
-    const comboCounts = {};
     const filteredCombos = [];
     const tempCounts = {};
 
+    const countsMap = {};
     bestCombos.forEach(c => {
         const name = c["Combo Name"];
         tempCounts[name] = (tempCounts[name] || 0);
 
         const removedCount = removedComboCounts[name] || 0;
 
-        if (tempCounts[name] < (getComboCount(bestCombos, name) - removedCount)) {
+        countsMap[name] = (countsMap[name] || 0) + 1;
+
+        if (tempCounts[name] < (countsMap[name] - removedCount)) {
             filteredCombos.push(c);
             tempCounts[name]++;
         }
     });
 
-    filteredCombos.forEach(c => {
-        const key = c["Combo Name"];
-        comboCounts[key] = comboCounts[key] || { combo: c, count: 0 };
-        comboCounts[key].count++;
-    });
+    // Create grouped array and sort by total skill up (descending),
+    // tie-break by count (descending), then combo name (asc)
+    const grouped = groupCombos(filteredCombos);
 
     // Helper to read numeric "Total skill up" (supports several possible field names)
     function getComboTotalSkillUp(combo) {
@@ -774,33 +470,8 @@ function displayResults(bestCombos, mode) {
         return isNaN(n) ? 0 : n;
     }
 
-    // Convert grouped object to array and sort by total skill up (descending),
-    // tie-break by count (descending), then combo name (asc)
-    const grouped = Object.values(comboCounts);
     const selectedSkills = getSelectedSortSkills();
-    grouped.sort((a, b) => {
-        if (selectedSkills.length > 0) {
-            const aSkillTotal = selectedSkills.reduce((sum, skill) => sum + (Number(a.combo[skill]) || 0), 0);
-            const bSkillTotal = selectedSkills.reduce((sum, skill) => sum + (Number(b.combo[skill]) || 0), 0);
-
-            if (bSkillTotal !== aSkillTotal) {
-                return bSkillTotal - aSkillTotal;
-            }
-        }
-
-        const aTotal = getComboTotalSkillUp(a.combo);
-        const bTotal = getComboTotalSkillUp(b.combo);
-
-        if (bTotal !== aTotal) {
-            return bTotal - aTotal;
-        }
-
-        if (b.count !== a.count) {
-            return b.count - a.count;
-        }
-
-        return (a.combo["Combo Name"] || "").localeCompare(b.combo["Combo Name"] || "");
-    });
+    sortGroupedCombos(grouped, selectedSkills);
 
     grouped.forEach(({ combo, count }) => {
         const comboName = combo["Combo Name"];
@@ -815,30 +486,11 @@ function displayResults(bestCombos, mode) {
         const removeBtn = document.createElement("button");
         removeBtn.className = "removeBtn";
         removeBtn.textContent = "Remove One";
-
-        removeBtn.addEventListener("click", () => {
-            const name = combo["Combo Name"];
-            const currentRemoved = removedComboCounts[name] || 0;
-
-            const isLastCopy = count === 1;
-
-            if (isLastCopy) {
-                fadeOutAndRemove(div, 300, () => {
-                    removedComboCounts[name] = currentRemoved + 1;
-                    displayResults(lastBestCombos, lastMode);
-                });
-            } else {
-                const countSpan = div.querySelector(".comboCount");
-
-                if (countSpan) {
-                    countSpan.classList.add("bump");
-                }
-
-                setTimeout(() => {
-                    removedComboCounts[name] = currentRemoved + 1;
-                    displayResults(lastBestCombos, lastMode);
-                }, 180);
-            }
+        attachRemoveHandler(removeBtn, {
+            combo,
+            count,
+            div,
+            mode: lastMode
         });
 
         // Color each card individually
@@ -857,16 +509,7 @@ function displayResults(bestCombos, mode) {
             })
             .join("");
 
-        const skillUps = [
-            ["Kicking", combo.Kicking],
-            ["Speed", combo.Speed],
-            ["Stamina", combo.Stamina],
-            ["Technique", combo.Technique],
-            ["Toughness", combo.Toughness],
-            ["Jumping", combo.Jumping],
-            ["Willpower", combo.Willpower]
-        ].filter(([name, val]) => val != null && val !== "")
-            .map(([name, val]) => [name, Number(val)]);
+        const skillUps = getSkillUps(combo);
 
         skillSortContainer.style.display = "block";
         div.innerHTML = `
@@ -906,6 +549,314 @@ function displayResults(bestCombos, mode) {
     const isBestMode = mode === "skills";
     const modeText = `${isBestMode ? "Best c" : "C"}ombo set gives a total of ${totalSkillPoints(bestCombos)} skill points across ${bestCombos.length} combos and ${totalCardsUsed(bestCombos)} cards.`;
 
-    summary.innerHTML = `<strong>${modeText}</strong><br><em>Total skill increases:</em> ${totalSkillsText}`;
+    summary.innerHTML = `<strong>${modeText}</strong><br><em>Total skill increases remaining:</em> ${totalSkillsText}`;
     resultsDiv.appendChild(summary);
+}
+
+// Get set of all combos possible with user's current cards
+function displayAllPossibleCombos() {
+    const skillSortContainer = document.getElementById("skillSortContainer");
+    const resultsDiv = document.getElementById("results");
+    resultsDiv.innerHTML = "";
+
+    const comboList = getMakeableCombos(currentAllModeCards);
+
+    // Group duplicates (combos that can be made more than once) into array
+    let grouped = groupCombos(comboList);
+
+    // Display message to user if no combos can be made
+    if (comboList.length === 0) {
+        skillSortContainer.style.display = "none";
+        resultsDiv.textContent = "No more combos can be made with the remaining cards.";
+        return;
+    }
+
+    const selectedSkills = getSelectedSortSkills();
+    sortGroupedCombos(grouped, selectedSkills);
+
+    grouped.forEach(({ combo, count }) => {
+        const comboName = combo["Combo Name"];
+
+        const div = document.createElement("div");
+        div.className = "comboResult";
+        div.style.marginBottom = "10px";
+        div.style.padding = "8px";
+        div.style.borderBottom = "1px solid #ccc";
+        div.dataset.comboName = comboName;
+
+        // Remove button
+        const removeBtn = document.createElement("button");
+        removeBtn.className = "removeBtn";
+        removeBtn.textContent = "Remove One";
+        attachRemoveHandler(removeBtn, {
+            combo,
+            count,
+            div,
+            mode: "all" // or lastMode
+        });
+
+        // Color each card individually
+        const cardElements = [combo.card1, combo.card2, combo.card3]
+            .filter(x => x && x.trim() !== "")
+            .map(cardName => {
+                const color = getCardColor(cardName);
+                return `<span style="
+                    background-color:${color.bg};
+                    color:${color.text};
+                    padding:2px 6px;
+                    border-radius:4px;
+                    margin-right:4px;
+                    display:inline-block;
+                ">${cardName}</span>`;
+            })
+            .join("");
+
+        const skillUps = getSkillUps(combo);
+
+        skillSortContainer.style.display = "block";
+        div.innerHTML = `
+            <strong>
+                ${comboName}
+                <span class="comboCount">${count > 1 ? `×${count}` : ""}</span>
+            </strong>
+            (${combo.Category})<br>
+            Cards: ${cardElements}<br>
+            Total Skill Up: ${combo["Total skill up"]}<br>
+            ${skillUps.map(([name, val]) => `${name}: ${val > 0 ? '+' + val : val}`).join(", ")}
+        `;
+
+        div.appendChild(removeBtn);
+        resultsDiv.appendChild(div);
+    });
+
+    const summary = document.createElement("p");
+    summary.innerHTML = `<strong>${comboList.length} possible combos found.</strong>`;
+    resultsDiv.appendChild(summary);
+}
+
+function buildCardInputs() {
+    const container = document.getElementById("cardList");
+
+    // Save current input values before rebuilding
+    const savedValues = {};
+    document.querySelectorAll("#cardList input").forEach(input => {
+        const cardName = input.id.replace(/^card-/, "").replace(/_/g, " ");
+        savedValues[cardName] = input.value;
+    });
+
+    container.innerHTML = "";
+    let sortedCards = Array.from(uniqueCards);
+
+    // Category definitions (must match getCardColor)
+    const categories = {
+        "Tactical": ["Analysis", "Marking", "Pressuring", "Countering", "Mini-Game", "Line Control", "Set Plays"],
+        "Technical": ["Dribbling", "Place Kicks", "Shooting", "Passing", "Freestyling", "Sliding", "Heading"],
+        "Physical": ["Running", "Weights", "Kicking", "Sprinting", "Agility", "Aerobics", "Stretching"],
+        "Support": ["Oil Therapy", "Meditation", "Signing", "PK Practice", "Judo", "Visualising", "Meeting", "Spa", "Mini-Camp", "Gaming", "Karaoke"]
+    };
+
+    // Determine card order based on the categories listed above
+    const categorized = [];
+    for (const arr of Object.values(categories)) {
+        categorized.push(...arr.filter(c => sortedCards.includes(c)));
+    }
+    sortedCards = [...categorized];
+
+    // Add category headings and cards
+    const addCategoryHeading = (title) => {
+        const heading = document.createElement("div");
+        heading.textContent = title;
+        heading.className = "categoryHeading";
+        container.appendChild(heading);
+    };
+
+    for (const [title, cards] of Object.entries(categories)) {
+        const filtered = cards.filter(c => sortedCards.includes(c));
+        if (filtered.length > 0) {
+            addCategoryHeading(title);
+            filtered.forEach(card => container.appendChild(createCardInput(card, savedValues[card])));
+        }
+    }
+}
+
+function createCardInput(card, savedValue = "0") {
+    const div = document.createElement("div");
+    div.className = "cardItem";
+
+    const label = document.createElement("label");
+    label.textContent = card;
+
+    const color = getCardColor(card);
+    label.style.backgroundColor = color.bg;
+    label.style.color = color.text;
+    label.style.padding = "4px 8px";
+    label.style.borderRadius = "4px";
+    label.style.marginRight = "10px";
+    label.style.minWidth = "140px";
+    label.style.textAlign = "center";
+
+    const input = document.createElement("input");
+    input.type = "number";
+    input.min = "0";
+    input.max = "9";
+    input.value = savedValue;
+    input.id = `card-${card.replace(/\s+/g, "_")}`;
+
+    input.addEventListener("input", () => {
+        if (input.value > 9) input.value = 9;
+        if (input.value < 0) input.value = 0;
+    });
+
+    div.appendChild(label);
+    div.appendChild(input);
+
+    return div;
+}
+
+
+// ====================
+//   Helper Functions
+// ====================
+
+// ---------------
+//  Data Helpers:
+// ---------------
+
+function groupCombos(comboList) {
+    const map = {};
+    comboList.forEach(c => {
+        const key = c["Combo Name"];
+        if (!map[key]) {
+            map[key] = { combo: c, count: 0 };
+        }
+        map[key].count++;
+    });
+    return Object.values(map);
+}
+
+function getSkillUps(combo) {
+    return [
+        ["Kicking", combo.Kicking],
+        ["Speed", combo.Speed],
+        ["Stamina", combo.Stamina],
+        ["Technique", combo.Technique],
+        ["Toughness", combo.Toughness],
+        ["Jumping", combo.Jumping],
+        ["Willpower", combo.Willpower]
+    ]
+    .filter(([_, val]) => val != null && val !== "")
+    .map(([name, val]) => [name, Number(val)]);
+}
+
+function getSelectedSortSkills() {
+    return Array.from(
+        document.querySelectorAll(".skillSort:checked")
+    ).map(cb => cb.value);
+}
+
+function totalCardsUsed(comboSet) {
+    let count = 0;
+    comboSet.forEach(c => {
+        const cards = [c.card1, c.card2, c.card3].filter(x => x && x.trim() !== "");
+        count += cards.length;
+    });
+    return count;
+}
+
+function totalSkillPoints(comboSet) {
+    let total = 0;
+    comboSet.forEach(c => {
+        const val = parseFloat(c["Total skill up"] || c.TotalSkillUp || c["Total Skill Up"]);
+        if (!isNaN(val)) total += val;
+    });
+    return total;
+}
+
+// -------------
+//  UI Helpers:
+// -------------
+
+// Helper function to assign colors by card category
+function getCardColor(cardName) {
+    const tactical = ["Analysis", "Marking", "Pressuring", "Countering", "Mini-Game", "Line Control", "Set Plays"];
+    const technical = ["Dribbling", "Place Kicks", "Shooting", "Passing", "Freestyling", "Sliding", "Heading"];
+    const physical = ["Running", "Weights", "Kicking", "Sprinting", "Agility", "Aerobics", "Stretching"];
+    const support = ["Oil Therapy", "Meditation", "Signing", "PK Practice", "Judo", "Visualising", "Meeting", "Spa", "Mini-Camp", "Gaming", "Karaoke"];
+
+    const name = cardName.trim();
+
+    if (tactical.includes(name))
+        return { bg: "#c9f5c4", text: "#2f5b2f" }; // green
+    if (technical.includes(name))
+        return { bg: "#ffcaca", text: "#661a1a" }; // red
+    if (physical.includes(name))
+        return { bg: "#cae1ff", text: "#1a3b66" }; // blue
+    if (support.includes(name))
+        return { bg: "#fff5c2", text: "#665c1a" }; // yellow
+
+    // Default (if card not categorized)
+    return { bg: "#eaeaea", text: "#333" };
+}
+
+function fadeOutAndRemove(element, duration = 300, callback) {
+    element.style.transition = `opacity ${duration}ms ease`;
+    element.style.opacity = "0";
+    setTimeout(() => {
+        if (callback) callback();
+    }, duration);
+}
+
+function attachRemoveHandler(button, { combo, count, div, mode }) {
+    button.addEventListener("click", () => {
+        const isLastCopy = count === 1;
+        const doRemove = () => {
+            if (mode === "all") {
+                [combo.card1, combo.card2, combo.card3]
+                    .filter(card => card && card.trim() !== "")
+                    .forEach(card => {
+                        const name = card.trim();
+                        if (currentAllModeCards[name] > 0) {
+                            currentAllModeCards[name]--;
+                        }
+                    });
+                displayAllPossibleCombos();
+            } else {
+                const name = combo["Combo Name"];
+                removedComboCounts[name] = (removedComboCounts[name] || 0) + 1;
+                displayResults(lastBestCombos, lastMode);
+            }
+        };
+        if (isLastCopy) {
+            fadeOutAndRemove(div, 300, doRemove);
+        } else {
+            const countSpan = div.querySelector(".comboCount");
+            if (countSpan) countSpan.classList.add("bump");
+            setTimeout(doRemove, 180);
+        }
+    });
+}
+
+// ------------------
+//  Sorting Helpers:
+// ------------------
+
+function sortGroupedCombos(grouped, selectedSkills) {
+    grouped.sort((a, b) => {
+        if (selectedSkills.length > 0) {
+            const aSkillTotal = selectedSkills.reduce((sum, skill) => sum + (Number(a.combo[skill]) || 0), 0);
+            const bSkillTotal = selectedSkills.reduce((sum, skill) => sum + (Number(b.combo[skill]) || 0), 0);
+
+            if (bSkillTotal !== aSkillTotal) {
+                return bSkillTotal - aSkillTotal;
+            }
+        }
+
+        const aTotal = parseFloat(a.combo["Total skill up"]) || 0;
+        const bTotal = parseFloat(b.combo["Total skill up"]) || 0;
+
+        if (bTotal !== aTotal) return bTotal - aTotal;
+
+        return (a.combo["Combo Name"] || "")
+            .localeCompare(b.combo["Combo Name"] || "");
+    });
 }
