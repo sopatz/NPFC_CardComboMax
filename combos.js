@@ -201,11 +201,13 @@ function findCombos() {
     }
 
     const gkLimitValue = document.getElementById("gkLimitSelect").value;
+    const comboLimitValue = document.getElementById("comboLimitSelect").value;
     const bestSet = maximizeUsage(
         makeableCombos,
         cardCounts,
         mode,
-        gkLimitValue
+        gkLimitValue,
+        comboLimitValue
     );
 
     lastMode = mode;
@@ -420,9 +422,10 @@ function displayAllPossibleCombos() {
 }
 
 // mode = "cards" or "skills"
-function maximizeUsage(comboList, available, mode = "combos", gkLimit = "none") {
-    // Normalize GK limit
+function maximizeUsage(comboList, available, mode = "combos", gkLimit = "none", comboLimit = "none") {
+    // Normalize GK limit and Combo Limit
     const GK_LIMIT = (gkLimit === "none") ? Infinity : parseInt(gkLimit, 10);
+    const COMBO_LIMIT = Math.min(parseInt(comboLimit, 10) || 25, 25);
 
     // Prepare a list of combos as objects { orig, neededArray, isGK, value, neededCountsMap, maxCopies }
     // Also collect all relevant card names
@@ -527,7 +530,7 @@ function maximizeUsage(comboList, available, mode = "combos", gkLimit = "none") 
 
 
     // helper: compute optimistic fractional upper bound from given idx and current counts
-    function fractionalUpperBound(idx, countsArr, currentGK) {
+    function fractionalUpperBound(idx, countsArr, currentGK, remainingSlots) {
         let bound = 0;
         const tempCounts = countsArr.slice();
         let gkRemaining = GK_LIMIT - currentGK;
@@ -546,8 +549,11 @@ function maximizeUsage(comboList, available, mode = "combos", gkLimit = "none") 
             }
             if (e.isGK) {
                 // only up to gkRemaining full copies allowed
-                possibleCopies = Math.min(possibleCopies, gkRemaining);
+                possibleCopies = Math.min(possibleCopies, gkRemaining, remainingSlots);
             }
+            // Always limit by remainingSlots
+            possibleCopies = Math.min(possibleCopies, remainingSlots);
+
             // greedily take as many full copies as possible
             if (possibleCopies > 0) {
                 bound += possibleCopies * e._value;
@@ -557,6 +563,9 @@ function maximizeUsage(comboList, available, mode = "combos", gkLimit = "none") 
                 }
                 if (e.isGK) gkRemaining -= possibleCopies;
             }
+
+            remainingSlots -= possibleCopies;
+            if (remainingSlots <= 0) break;
         }
         // Fractional relaxation: try to add a fractional piece from the remaining sorted items
         // Tends to help pruning slightly
@@ -592,7 +601,9 @@ function maximizeUsage(comboList, available, mode = "combos", gkLimit = "none") 
         return idx + '|' + gkCount + '|' + countsArr.join(',');
     }
 
-    function dfs(idx, countsArr, currentScore, gkCount) {
+    function dfs(idx, countsArr, currentScore, gkCount, comboCount) {
+        if (comboCount > COMBO_LIMIT) return;
+
         // compute memo key
         const key = countsKey(idx, countsArr, gkCount);
         if (memo.has(key) && memo.get(key) >= currentScore) {
@@ -602,7 +613,7 @@ function maximizeUsage(comboList, available, mode = "combos", gkLimit = "none") 
         memo.set(key, currentScore);
 
         // update best
-        if (currentScore > bestSetRes.score) {
+        if (comboCount <= COMBO_LIMIT && currentScore > bestSetRes.score) {
             bestSetRes.score = currentScore;
             bestSetRes.set = currentChoiceStack.slice();
         }
@@ -610,7 +621,8 @@ function maximizeUsage(comboList, available, mode = "combos", gkLimit = "none") 
         if (idx >= combosPrepared.length) return;
 
         // optimistic upper bound (currentScore + fractional bound)
-        const ub = currentScore + fractionalUpperBound(idx, countsArr, gkCount);
+        const remainingSlots = COMBO_LIMIT - comboCount;
+        const ub = currentScore + fractionalUpperBound(idx, countsArr, gkCount, remainingSlots);
         if (ub <= bestSetRes.score) {
             return; // prune
         }
@@ -626,16 +638,18 @@ function maximizeUsage(comboList, available, mode = "combos", gkLimit = "none") 
         }
         if (!isFinite(maxPossible) || maxPossible <= 0) {
             // can't take any, skip to next
-            dfs(idx + 1, countsArr, currentScore, gkCount);
+            dfs(idx + 1, countsArr, currentScore, gkCount, comboCount);
             return;
         }
         if (e.isGK) {
             maxPossible = Math.min(maxPossible, GK_LIMIT - gkCount);
             if (maxPossible <= 0) {
-                dfs(idx + 1, countsArr, currentScore, gkCount);
+                dfs(idx + 1, countsArr, currentScore, gkCount, comboCount);
                 return;
             }
         }
+
+        maxPossible = Math.min(maxPossible, remainingSlots);
 
         // iterate choices in descending order (try to take as many as possible first to find good solutions quickly)
         for (let take = maxPossible; take >= 0; take--) {
@@ -648,7 +662,13 @@ function maximizeUsage(comboList, available, mode = "combos", gkLimit = "none") 
                 if (e.isGK) gkCount += take;
                 currentChoiceStack.push({ combo: e.orig, copies: take });
                 const addedScore = take * e._value;
-                dfs(idx + 1, countsArr, currentScore + addedScore, gkCount);
+                dfs(
+                    idx + 1,
+                    countsArr,
+                    currentScore + addedScore,
+                    gkCount,
+                    comboCount + take
+                );
                 // undo
                 currentChoiceStack.pop();
                 if (e.isGK) gkCount -= take;
@@ -658,7 +678,7 @@ function maximizeUsage(comboList, available, mode = "combos", gkLimit = "none") 
                 }
             } else {
                 // take === 0, skip this combo
-                dfs(idx + 1, countsArr, currentScore, gkCount);
+                dfs(idx + 1, countsArr, currentScore, gkCount, comboCount);
             }
 
             // small micro-optimization: if best is already >= currentScore + maxPossible*value, break early
@@ -670,7 +690,7 @@ function maximizeUsage(comboList, available, mode = "combos", gkLimit = "none") 
     }
 
     // start search
-    dfs(0, startCounts.slice(), 0, 0);
+    dfs(0, startCounts.slice(), 0, 0, 0);
 
     const finalList = [];
     for (const item of bestSetRes.set) {

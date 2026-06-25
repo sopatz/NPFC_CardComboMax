@@ -24,9 +24,10 @@
 
         <br><br><strong>GK Combo Limit:</strong><br>
         <select id="gkLimitSelect">
-            <option value="none">No limit</option>
-            <option value="1">Limit to 1 GK combo</option>
-            <option value="2" selected>Limit to 2 GK combos</option>
+            <option value="none">No Limit</option>
+            <option value="2" selected>Limit to 2 GK Combos</option>
+            <option value="1">Limit to 1 GK Combo</option>
+            <option value="0">No GK Combos</option>
         </select>
 
         <br><br><strong>Restrictions:</strong><br>
@@ -34,6 +35,36 @@
             <input type="checkbox" id="noHiddenCheckbox">
             Exclude Hidden (H) Combos
         </label>
+
+        <br><br><strong>Max Combos in Set:</strong><br>
+        <select id="comboLimitSelect">
+            <!-- 25 is the max amount of players you can have on your team at once, so there's no need for this to go any higher -->
+            <option value="25" selected>25 (Max)</option>
+            <option value="24">24</option>
+            <option value="23">23</option>
+            <option value="22">22</option>
+            <option value="21">21</option>
+            <option value="20">20</option>
+            <option value="19">19</option>
+            <option value="18">18</option>
+            <option value="17">17</option>
+            <option value="16">16</option>
+            <option value="15">15</option>
+            <option value="14">14</option>
+            <option value="13">13</option>
+            <option value="12">12</option>
+            <option value="11">11</option>
+            <option value="10">10</option>
+            <option value="9">9</option>
+            <option value="8">8</option>
+            <option value="7">7</option>
+            <option value="6">6</option>
+            <option value="5">5</option>
+            <option value="4">4</option>
+            <option value="3">3</option>
+            <option value="2">2</option>
+            <option value="1">1</option>
+        </select>
 
         <br><br><strong>Sort Cards By:</strong><br>
         <select id="sortSelect">
@@ -65,7 +96,7 @@
         <hr>
         <p><a href="#">Back to Top</a> | <a href="combo_list.html">Combo List</a></p>
         <p><em>Created by: Seth Opatz, 10/06/2025<br>
-               Last Updated: 06/24/2026</em></p>
+               Last Updated: 06/25/2026</em></p>
     </footer>
 </body>
 
