@@ -227,14 +227,38 @@ function rerenderResults() {
 
 // Calculate all currently make-able combos from current inventory
 function getMakeableCombos(cardCounts) {
-    return combos.filter(combo => {
-        const cardsNeeded = [combo.card1, combo.card2, combo.card3]
-            .filter(c => c && c.trim() !== "");
+    const result = [];
 
-        return cardsNeeded.every(card =>
-            (cardCounts[card.trim()] || 0) > 0
-        );
+    combos.forEach(combo => {
+        const cardsNeeded = [combo.card1, combo.card2, combo.card3]
+            .filter(c => c && c.trim() !== "")
+            .map(c => c.trim());
+
+        if (cardsNeeded.length === 0) return;
+
+        // Count how many of each card this combo needs
+        const needCounts = {};
+        cardsNeeded.forEach(c => {
+            needCounts[c] = (needCounts[c] || 0) + 1;
+        });
+
+        // Determine max copies possible
+        let maxCopies = Infinity;
+
+        for (const card in needCounts) {
+            const needed = needCounts[card];
+            const available = cardCounts[card] || 0;
+
+            maxCopies = Math.min(maxCopies, Math.floor(available / needed));
+        }
+
+        // Add combo multiple times
+        for (let i = 0; i < maxCopies; i++) {
+            result.push(combo);
+        }
     });
+
+    return result;
 }
 
 function getSelectedSortSkills() {
@@ -285,6 +309,15 @@ function sortCombosForDisplay(comboList) {
     });
 }
 
+function fadeOutAndRemove(element, duration = 300, callback) {
+    element.style.transition = `opacity ${duration}ms ease`;
+    element.style.opacity = "0";
+
+    setTimeout(() => {
+        if (callback) callback();
+    }, duration);
+}
+
 // Get set of all combos possible with user's current cards
 function displayAllPossibleCombos() {
     const skillSortContainer = document.getElementById("skillSortContainer");
@@ -293,6 +326,17 @@ function displayAllPossibleCombos() {
 
     const comboList = getMakeableCombos(currentAllModeCards);
 
+    // Group duplicates (combos that can be made more than once)
+    const comboCounts = {};
+    comboList.forEach(c => {
+        const key = c["Combo Name"];
+        comboCounts[key] = comboCounts[key] || { combo: c, count: 0 };
+        comboCounts[key].count++;
+    });
+
+    // Convert to array
+    let grouped = Object.values(comboCounts);
+
     // Display message to user if no combos can be made
     if (comboList.length === 0) {
         skillSortContainer.style.display = "none";
@@ -300,10 +344,27 @@ function displayAllPossibleCombos() {
         return;
     }
 
-    // Sort by total skill up descending
-    sortCombosForDisplay(comboList);
+    const selectedSkills = getSelectedSortSkills();
+    grouped.sort((a, b) => {
+        if (selectedSkills.length > 0) {
+            const aSkillTotal = selectedSkills.reduce((sum, skill) => sum + (Number(a.combo[skill]) || 0), 0);
+            const bSkillTotal = selectedSkills.reduce((sum, skill) => sum + (Number(b.combo[skill]) || 0), 0);
 
-    comboList.forEach(combo => {
+            if (bSkillTotal !== aSkillTotal) {
+                return bSkillTotal - aSkillTotal;
+            }
+        }
+
+        const aTotal = parseFloat(a.combo["Total skill up"]) || 0;
+        const bTotal = parseFloat(b.combo["Total skill up"]) || 0;
+
+        if (bTotal !== aTotal) return bTotal - aTotal;
+
+        return (a.combo["Combo Name"] || "")
+            .localeCompare(b.combo["Combo Name"] || "");
+    });
+
+    grouped.forEach(({ combo, count }) => {
         const comboName = combo["Combo Name"];
 
         const div = document.createElement("div");
@@ -315,20 +376,39 @@ function displayAllPossibleCombos() {
 
         // Remove button
         const removeBtn = document.createElement("button");
-        removeBtn.textContent = "Remove";
+        removeBtn.textContent = "Remove One";
         removeBtn.className = "removeBtn";
         removeBtn.addEventListener("click", () => {
-            // Consume cards used by this combo
-            [combo.card1, combo.card2, combo.card3]
-                .filter(card => card && card.trim() !== "")
-                .forEach(card => {
-                    const name = card.trim();
-                    if (currentAllModeCards[name] > 0) {
-                        currentAllModeCards[name]--;
-                    }
+            const isLastCopy = count === 1;
+            if (isLastCopy) {
+                fadeOutAndRemove(div, 300, () => {
+                    [combo.card1, combo.card2, combo.card3]
+                        .filter(card => card && card.trim() !== "")
+                        .forEach(card => {
+                            const name = card.trim();
+                            if (currentAllModeCards[name] > 0) {
+                                currentAllModeCards[name]--;
+                            }
+                        });
+                    displayAllPossibleCombos();
                 });
-            // Regenerate entire list
-            displayAllPossibleCombos();
+            } else {
+                const countSpan = div.querySelector(".comboCount");
+                if (countSpan) {
+                    countSpan.classList.add("bump");
+                }
+                setTimeout(() => {
+                    [combo.card1, combo.card2, combo.card3]
+                        .filter(card => card && card.trim() !== "")
+                        .forEach(card => {
+                            const name = card.trim();
+                            if (currentAllModeCards[name] > 0) {
+                                currentAllModeCards[name]--;
+                            }
+                        });
+                    displayAllPossibleCombos();
+                }, 180);
+            }
         });
 
         // Color each card individually
@@ -361,7 +441,10 @@ function displayAllPossibleCombos() {
 
         skillSortContainer.style.display = "block";
         div.innerHTML = `
-            <strong>${comboName}</strong>
+            <strong>
+                ${comboName}
+                <span class="comboCount">${count > 1 ? `×${count}` : ""}</span>
+            </strong>
             (${combo.Category})<br>
             Cards: ${cardElements}<br>
             Total Skill Up: ${combo["Total skill up"]}<br>

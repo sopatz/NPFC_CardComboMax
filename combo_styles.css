@@ -164,6 +164,16 @@ button:hover {
     margin-right: 12px;
 }
 
+.comboCount {
+    display: inline-block;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.comboCount.bump {
+    transform: scale(1.3);
+    opacity: 0.6;
+}
+
 
 /* --- Mobile stylings --- */
 @media (max-width: 600px) {
