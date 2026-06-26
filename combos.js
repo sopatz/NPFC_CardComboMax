@@ -181,7 +181,7 @@ function maximizeUsage(comboList, available, mode = "combos", gkLimit = "none", 
             }
             entry._value = Math.max(0, total);
         } else {
-            entry._value = 1;
+            entry._value = Math.random();
         }
     });
 
@@ -206,73 +206,39 @@ function maximizeUsage(comboList, available, mode = "combos", gkLimit = "none", 
         const diffValue = b._value - a._value;
         if (diffValue !== 0) return diffValue;
 
-        // tie → random
-        return Math.random() < 0.5 ? -1 : 1;
+        // tie
+        return (a.orig["Combo Name"] || "")
+            .localeCompare(b.orig["Combo Name"] || "");
     });
 
 
     // helper: compute optimistic fractional upper bound from given idx and current counts
     function fractionalUpperBound(idx, countsArr, currentGK, remainingSlots) {
         let bound = 0;
-        const tempCounts = countsArr.slice();
-        let gkRemaining = GK_LIMIT - currentGK;
         for (let i = idx; i < combosPrepared.length; i++) {
             const e = combosPrepared[i];
-            // how many full copies can we still make given tempCounts
             let possibleCopies = Infinity;
             for (const card of e.needed) {
                 const need = e.needCounts[card] || 1;
-                const avail = tempCounts[cardIndexMap[card]] || 0;
+                const avail = countsArr[cardIndexMap[card]] || 0;
                 possibleCopies = Math.min(possibleCopies, Math.floor(avail / need));
             }
-            if (!isFinite(possibleCopies) || possibleCopies <= 0) {
-                // can't make a full copy now: skip
-                continue;
-            }
+
             if (e.isGK) {
-                // only up to gkRemaining full copies allowed
-                possibleCopies = Math.min(possibleCopies, gkRemaining, remainingSlots);
+                possibleCopies = Math.min(possibleCopies, GK_LIMIT - currentGK);
             }
-            // Always limit by remainingSlots
+
             possibleCopies = Math.min(possibleCopies, remainingSlots);
 
-            // greedily take as many full copies as possible
             if (possibleCopies > 0) {
                 bound += possibleCopies * e._value;
-                for (const card of e.needed) {
-                    const need = e.needCounts[card] || 1;
-                    tempCounts[cardIndexMap[card]] -= possibleCopies * need;
-                }
-                if (e.isGK) gkRemaining -= possibleCopies;
+                remainingSlots -= possibleCopies;
             }
 
-            remainingSlots -= possibleCopies;
             if (remainingSlots <= 0) break;
-        }
-        // Fractional relaxation: try to add a fractional piece from the remaining sorted items
-        // Tends to help pruning slightly
-        for (let i = idx; i < combosPrepared.length; i++) {
-            const e = combosPrepared[i];
-            // compute a small fractional availability (sum minimal remaining fraction across its needed cards)
-            let minFrac = Infinity;
-            for (const card of e.needed) {
-                const need = e.needCounts[card] || 1;
-                const avail = tempCounts[cardIndexMap[card]] || 0;
-                minFrac = Math.min(minFrac, avail / need);
-            }
-            if (minFrac > 0 && minFrac < 1) {
-                // contribution is ratio * minFrac
-                const cost = e.needed.reduce((s, c) => s + (e.needCounts[c] || 1), 0);
-                const ratio = (e._value / cost) || 0;
-                bound += ratio * cost * minFrac;
-                break;
-            }
         }
         return bound;
     }
-
-    // Memoization map: key -> bestAdditionalScore (store best total score achieved from this state)
-    const memo = new Map();
 
     // DFS that branches on counts of each combo (0..maxCopiesPossible)
     const bestSetRes = { score: -Infinity, set: [] };
@@ -285,14 +251,6 @@ function maximizeUsage(comboList, available, mode = "combos", gkLimit = "none", 
 
     function dfs(idx, countsArr, currentScore, gkCount, comboCount) {
         if (comboCount > COMBO_LIMIT) return;
-
-        // compute memo key
-        const key = countsKey(idx, countsArr, gkCount);
-        if (memo.has(key) && memo.get(key) >= currentScore) {
-            // been here with at least this score already
-            return;
-        }
-        memo.set(key, currentScore);
 
         // update best
         if (comboCount <= COMBO_LIMIT && currentScore > bestSetRes.score) {
@@ -307,6 +265,11 @@ function maximizeUsage(comboList, available, mode = "combos", gkLimit = "none", 
         const ub = currentScore + fractionalUpperBound(idx, countsArr, gkCount, remainingSlots);
         if (ub <= bestSetRes.score) {
             return; // prune
+        }
+
+        // If I take the best combo every time and I still can't beat current best, return
+        if (currentScore + remainingSlots * combosPrepared[idx]._value <= bestSetRes.score) {
+            return;
         }
 
         const e = combosPrepared[idx];
@@ -368,6 +331,17 @@ function maximizeUsage(comboList, available, mode = "combos", gkLimit = "none", 
                 // already found as-good-or-better solution without exploring smaller take values
                 break;
             }
+        }
+    }
+
+    if (mode === "cards") {
+        shuffleArray(combosPrepared);
+    }
+
+    function shuffleArray(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
         }
     }
 
